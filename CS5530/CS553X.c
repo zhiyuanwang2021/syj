@@ -1,37 +1,47 @@
+/*
+ * CS5530 driver disabled for CS5552 migration.
+ *
+ * Notes:
+ * 1. Legacy CS5530 implementation is preserved below in a disabled block.
+ * 2. Public API names and channel order are intentionally kept unchanged.
+ * 3. SPI pins, chip-select order, and application call sites stay in place
+ *    so the CS5552 driver can be inserted with minimal upper-layer changes.
+ */
+#if 0
 /**********************************************************************	 
-* 公司名称 : 麦恩迪电路设计有限公司
-* 模块名称 ：CS550驱动
-* 系统主频 : 72 MHz
-* 创建人   : eysmcu
-* 修改人   : eysmcu 
-* 创建日期 : 2019年10月12日
-* 淘宝网址 : http://mindesigner.taobao.com
-* 淘宝ID号 : eysmcu
+* 鍏徃鍚嶇О : 楹︽仼杩數璺璁℃湁闄愬叕鍙?
+* 妯″潡鍚嶇О 锛欳S550椹卞姩
+* 绯荤粺涓婚 : 72 MHz
+* 鍒涘缓浜?  : eysmcu
+* 淇敼浜?  : eysmcu 
+* 鍒涘缓鏃ユ湡 : 2019骞?0鏈?2鏃?
+* 娣樺疂缃戝潃 : http://mindesigner.taobao.com
+* 娣樺疂ID鍙?: eysmcu
 
-						  版权所有 @ 麦恩迪
+						  鐗堟潈鎵€鏈?@ 楹︽仼杩?
 ***********************************************************************/
 
 #include "CS553X.h"	
 #include "usart.h"
 #include "delay.h"
 #include "elog.h"
-/****************************参数定义**********************************/
-//1.命令寄存器
-union REG_CMD  									//命令寄存器定义						
+/****************************鍙傛暟瀹氫箟**********************************/
+//1.鍛戒护瀵勫瓨鍣?
+union REG_CMD  									//鍛戒护瀵勫瓨鍣ㄥ畾涔?					
 {											
 	unsigned char BYTE;							//Byte  Access														
 	struct 										//Bit   Access
 	{											
-		unsigned char REG:3;					//寄存器选择
-		unsigned char RW :1;					//读写控制
+		unsigned char REG:3;					//瀵勫瓨鍣ㄩ€夋嫨
+		unsigned char RW :1;					//璇诲啓鎺у埗
 		unsigned char    :2;					//NU
-		unsigned char MC :1;					//转换模式
-		unsigned char B7 :1;					//最高位
+		unsigned char MC :1;					//杞崲妯″紡
+		unsigned char B7 :1;					//鏈€楂樹綅
 	}	BIT;
 }CMD;
 
-//2.配置寄存器(D31-D16) 	
-union REG_CONFIG_H  							//配置寄存器定义					
+//2.閰嶇疆瀵勫瓨鍣?D31-D16) 	
+union REG_CONFIG_H  							//閰嶇疆瀵勫瓨鍣ㄥ畾涔?				
 {										
 	unsigned short WORD;						//WORD Access 			
 	struct 										
@@ -42,22 +52,22 @@ union REG_CONFIG_H  							//配置寄存器定义
 	struct 										//Bit  Access
 	{											
 		unsigned char      :3;					//NU
-		unsigned char FRS  :1;					//滤波器速度选择
+		unsigned char FRS  :1;					//婊ゆ尝鍣ㄩ€熷害閫夋嫨
 		unsigned char      :3;					//NU
-		unsigned char A0   :1;					//输出锁存位0
-		unsigned char A1   :1;					//输出锁存位1
-		unsigned char VRS  :1;					//参考电压选择
+		unsigned char A0   :1;					//杈撳嚭閿佸瓨浣?
+		unsigned char A1   :1;					//杈撳嚭閿佸瓨浣?
+		unsigned char VRS  :1;					//鍙傝€冪數鍘嬮€夋嫨
 		unsigned char      :1;					//NU
-		unsigned char IS   :1;					//输入短路
-		unsigned char RV   :1;					//有效复位
-		unsigned char RS   :1;					//系统复位
-		unsigned char PDW  :1;					//节电模式
-		unsigned char PSS  :1;					//节电模式选择		
+		unsigned char IS   :1;					//杈撳叆鐭矾
+		unsigned char RV   :1;					//鏈夋晥澶嶄綅
+		unsigned char RS   :1;					//绯荤粺澶嶄綅
+		unsigned char PDW  :1;					//鑺傜數妯″紡
+		unsigned char PSS  :1;					//鑺傜數妯″紡閫夋嫨		
 	}	BIT;
 }CONFIG_H;
 
-//3.配置寄存器(D15-D00)
-union REG_CONFIG_L  							//配置寄存器定义 						
+//3.閰嶇疆瀵勫瓨鍣?D15-D00)
+union REG_CONFIG_L  							//閰嶇疆瀵勫瓨鍣ㄥ畾涔?						
 {										
 	unsigned short WORD;						//WORD Access 			
 	struct 										
@@ -69,15 +79,15 @@ union REG_CONFIG_L  							//配置寄存器定义
 	{											
 		unsigned char      :8;					//NU									
 		unsigned char      :1;					//NU
-		unsigned char OCD  :1;					//开路检测位
-		unsigned char UBP  :1;					//信号极性选择
-		unsigned char WR3_0:4;					//字速率
+		unsigned char OCD  :1;					//寮€璺娴嬩綅
+		unsigned char UBP  :1;					//淇″彿鏋佹€ч€夋嫨
+		unsigned char WR3_0:4;					//瀛楅€熺巼
 		unsigned char      :1;					//NU	
 	}	BIT;
 }CONFIG_L;
 
-//4.数据寄存器(D31-D16)	
-union REG_DATA_H 								//数据寄存器16位(D31-D16)			
+//4.鏁版嵁瀵勫瓨鍣?D31-D16)	
+union REG_DATA_H 								//鏁版嵁瀵勫瓨鍣?6浣?D31-D16)			
 {										
 	unsigned short WORD;						//WORD Access 			
 	struct 										
@@ -87,8 +97,8 @@ union REG_DATA_H 								//数据寄存器16位(D31-D16)
 	}	BYTE;																	
 }DATA_H;
 
-//5.数据寄存器(D15-D0)	
-union REG_DATA_L 								//数据寄存器16位(D15-D0)			
+//5.鏁版嵁瀵勫瓨鍣?D15-D0)	
+union REG_DATA_L 								//鏁版嵁瀵勫瓨鍣?6浣?D15-D0)			
 {										
 	unsigned short WORD;						//WORD Access 			
 	struct 										
@@ -99,20 +109,20 @@ union REG_DATA_L 								//数据寄存器16位(D15-D0)
 	struct 										//Bit  Access
 	{	
 		unsigned char      :2;					//NU
-		unsigned char OF   :1;					//超范围标志位
+		unsigned char OF   :1;					//瓒呰寖鍥存爣蹇椾綅
 		unsigned char      :5;					//NU
-		unsigned char D15_8:8;					//转换结果LSB
+		unsigned char D15_8:8;					//杞崲缁撴灉LSB
 	}	BIT;	
 }DATA_L;
 
 cs5530_t cs5530;
 
 /**********************************************************************
-* 名称 : adc_sw_Reset(void)
-* 功能 : ADC软复位函数
-* 输入 : 无
-* 输出 ：无
-* 说明 : 无
+* 鍚嶇О : adc_sw_Reset(void)
+* 鍔熻兘 : ADC杞浣嶅嚱鏁?
+* 杈撳叆 : 鏃?
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 鏃?
 ***********************************************************************/
 void adc_sw_Reset(void)
 {
@@ -122,7 +132,7 @@ void adc_sw_Reset(void)
 	CS2_RESET;
 	CS3_RESET;
 	delay_us(10);
-	for(x = 0;x < 20;x ++)	   					//至少发送15个SYNC1
+	for(x = 0;x < 20;x ++)	   					//鑷冲皯鍙戦€?5涓猄YNC1
 	{
 		spi_Write_Byte(CMD_SYNC1);	  			//0xFF
 		delay_us(10);
@@ -134,48 +144,48 @@ void adc_sw_Reset(void)
 	CS3_SET;
 }
 /**********************************************************************
-* 名称 : adc_Write_CFG_Register(unsigned char nVREF,
+* 鍚嶇О : adc_Write_CFG_Register(unsigned char nVREF,
 							    unsigned char nFRS,
 								unsigned char nWRX,	
 								unsigned char nUB)
-* 功能 : ADC写配置寄存器
-* 输入 : .........
-* 输出 ：无
-* 说明 :  关于nUB极性变量设置的重要说明
+* 鍔熻兘 : ADC鍐欓厤缃瘎瀛樺櫒
+* 杈撳叆 : .........
+* 杈撳嚭 锛氭棤
+* 璇存槑 :  鍏充簬nUB鏋佹€у彉閲忚缃殑閲嶈璇存槑
 
-#define Unipolar			0x00				//单极性
-#define Bipolar				0x01				//双极性
+#define Unipolar			0x00				//鍗曟瀬鎬?
+#define Bipolar				0x01				//鍙屾瀬鎬?
 
-1.通常情况下ADC的单极性是指单端信号，既以GND为参考的信号，而双极性信号
-指差分信号，CS553X信号的模拟部分实际是支持正负激励的，既VA+接正压，而
-VA-接负压，两者的差值绝对值不超过6V即可，因此，CS553X芯片在设置nUB极性
-的时候需要注意，采用正压激励的时候必须设置为单极性，采用正负压激励的时
-候设置为双极性，否则，读取数据寄存器的值会发生异常；
+1.閫氬父鎯呭喌涓婣DC鐨勫崟鏋佹€ф槸鎸囧崟绔俊鍙凤紝鏃互GND涓哄弬鑰冪殑淇″彿锛岃€屽弻鏋佹€т俊鍙?
+鎸囧樊鍒嗕俊鍙凤紝CS553X淇″彿鐨勬ā鎷熼儴鍒嗗疄闄呮槸鏀寔姝ｈ礋婵€鍔辩殑锛屾棦VA+鎺ユ鍘嬶紝鑰?
+VA-鎺ヨ礋鍘嬶紝涓よ€呯殑宸€肩粷瀵瑰€间笉瓒呰繃6V鍗冲彲锛屽洜姝わ紝CS553X鑺墖鍦ㄨ缃畁UB鏋佹€?
+鐨勬椂鍊欓渶瑕佹敞鎰忥紝閲囩敤姝ｅ帇婵€鍔辩殑鏃跺€欏繀椤昏缃负鍗曟瀬鎬э紝閲囩敤姝ｈ礋鍘嬫縺鍔辩殑鏃?
+鍊欒缃负鍙屾瀬鎬э紝鍚﹀垯锛岃鍙栨暟鎹瘎瀛樺櫒鐨勫€间細鍙戠敓寮傚父锛?
 
-2.实际使用中，特别是采集电桥信号的时候，用户可以采用6V作为激励；
+2.瀹為檯浣跨敤涓紝鐗瑰埆鏄噰闆嗙數妗ヤ俊鍙风殑鏃跺€欙紝鐢ㄦ埛鍙互閲囩敤6V浣滀负婵€鍔憋紱
 ***********************************************************************/
-void adc_Write_CFG_Register(unsigned char nVREF,//基准电压
-							unsigned char nFRS,	//滤波器速度
-							unsigned char nWRX,	//速率字
-							unsigned char nUB)	//极性
+void adc_Write_CFG_Register(unsigned char nVREF,//鍩哄噯鐢靛帇
+							unsigned char nFRS,	//婊ゆ尝鍣ㄩ€熷害
+							unsigned char nWRX,	//閫熺巼瀛?
+							unsigned char nUB)	//鏋佹€?
 {
 	CONFIG_H.WORD = 0x00;
 	CONFIG_L.WORD = 0x00;
 	CMD.BYTE      = 0x00;
 	
-	//1.设置命令寄存器
-	CMD.BIT.REG = REG_CFG;						//选择配置寄存器
-	CMD.BIT.RW  = RW_WRITE;						//写操作
-	CMD.BIT.MC  = 0;							//模式写0
-	CMD.BIT.B7  = 0;							//最高位写0
+	//1.璁剧疆鍛戒护瀵勫瓨鍣?
+	CMD.BIT.REG = REG_CFG;						//閫夋嫨閰嶇疆瀵勫瓨鍣?
+	CMD.BIT.RW  = RW_WRITE;						//鍐欐搷浣?
+	CMD.BIT.MC  = 0;							//妯″紡鍐?
+	CMD.BIT.B7  = 0;							//鏈€楂樹綅鍐?
 	
-	//2.设置配置寄存器
-	CONFIG_H.BIT.VRS = nVREF;					//设置参考电压
-	CONFIG_H.BIT.FRS = nFRS;					//设置滤波器速度
-	CONFIG_L.BIT.WR3_0 = nWRX;					//设置转换速度
-	CONFIG_L.BIT.UBP = nUB;						//设置极性
+	//2.璁剧疆閰嶇疆瀵勫瓨鍣?
+	CONFIG_H.BIT.VRS = nVREF;					//璁剧疆鍙傝€冪數鍘?
+	CONFIG_H.BIT.FRS = nFRS;					//璁剧疆婊ゆ尝鍣ㄩ€熷害
+	CONFIG_L.BIT.WR3_0 = nWRX;					//璁剧疆杞崲閫熷害
+	CONFIG_L.BIT.UBP = nUB;						//璁剧疆鏋佹€?
 	
-	//3.写入寄存器
+	//3.鍐欏叆瀵勫瓨鍣?
 	//NSS_RESET;									//CS = 0
 	CS1_RESET;
 	CS2_RESET;
@@ -192,11 +202,11 @@ void adc_Write_CFG_Register(unsigned char nVREF,//基准电压
 	CS3_SET;
 }
 /**********************************************************************
-* 名称 : adc_Read_CFG_Register(void)
-* 功能 : ADC读配置寄存器
-* 输入 : 无
-* 输出 ：无
-* 说明 : 无
+* 鍚嶇О : adc_Read_CFG_Register(void)
+* 鍔熻兘 : ADC璇婚厤缃瘎瀛樺櫒
+* 杈撳叆 : 鏃?
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 鏃?
 ***********************************************************************/
 void adc_Read_CFG_Register(void)
 {
@@ -204,13 +214,13 @@ void adc_Read_CFG_Register(void)
 	CONFIG_L.WORD = 0x00;
 	CMD.BYTE      = 0x00;
 	
-	//1.设置命令寄存器
-	CMD.BIT.REG = REG_CFG;						//选择配置寄存器
-	CMD.BIT.RW  = RW_READ;						//读操作
-	CMD.BIT.MC  = 0;							//模式写0
-	CMD.BIT.B7  = 0;							//最高位写0	
+	//1.璁剧疆鍛戒护瀵勫瓨鍣?
+	CMD.BIT.REG = REG_CFG;						//閫夋嫨閰嶇疆瀵勫瓨鍣?
+	CMD.BIT.RW  = RW_READ;						//璇绘搷浣?
+	CMD.BIT.MC  = 0;							//妯″紡鍐?
+	CMD.BIT.B7  = 0;							//鏈€楂樹綅鍐?	
 
-	//2.读取寄存器数据
+	//2.璇诲彇瀵勫瓨鍣ㄦ暟鎹?
 	NSS_RESET;									//CS = 0
 	spi_Write_Byte(CMD.BYTE);					delay_us(10);
 	
@@ -221,11 +231,11 @@ void adc_Read_CFG_Register(void)
 	NSS_SET;									//CS = 1		
 }
 /**********************************************************************
-* 名称 : adc_Write_Gain_Register(long int g_Value)
-* 功能 : ADC写增益寄存器
-* 输入 : g_Value -- 增益值
-* 输出 ：无
-* 说明 : 实际设置时增益寄存器的值不要超过40！！！！
+* 鍚嶇О : adc_Write_Gain_Register(long int g_Value)
+* 鍔熻兘 : ADC鍐欏鐩婂瘎瀛樺櫒
+* 杈撳叆 : g_Value -- 澧炵泭鍊?
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 瀹為檯璁剧疆鏃跺鐩婂瘎瀛樺櫒鐨勫€间笉瑕佽秴杩?0锛侊紒锛侊紒
 ***********************************************************************/
 void adc_Write_Gain_Register(long int g_Value)
 {
@@ -233,13 +243,13 @@ void adc_Write_Gain_Register(long int g_Value)
 	
 	CMD.BYTE = 0x00;
 	
-	//1.设置命令寄存器
-	CMD.BIT.REG = REG_GAIN;						//选择增益寄存器
-	CMD.BIT.RW  = RW_WRITE;						//写操作
-	CMD.BIT.MC  = 0;							//模式写0
-	CMD.BIT.B7  = 0;							//最高位写0			
+	//1.璁剧疆鍛戒护瀵勫瓨鍣?
+	CMD.BIT.REG = REG_GAIN;						//閫夋嫨澧炵泭瀵勫瓨鍣?
+	CMD.BIT.RW  = RW_WRITE;						//鍐欐搷浣?
+	CMD.BIT.MC  = 0;							//妯″紡鍐?
+	CMD.BIT.B7  = 0;							//鏈€楂樹綅鍐?			
 	
-	//2.写入寄存器数据
+	//2.鍐欏叆瀵勫瓨鍣ㄦ暟鎹?
 	//NSS_RESET;									//CS = 0
 	CS1_RESET;
 	CS2_RESET;
@@ -257,11 +267,11 @@ void adc_Write_Gain_Register(long int g_Value)
 	CS3_SET;
 }
 /**********************************************************************
-* 名称 : adc_Read_Gain_Register(void)
-* 功能 : ADC读增益寄存器
-* 输入 : 无
-* 输出 ：无
-* 说明 : 无
+* 鍚嶇О : adc_Read_Gain_Register(void)
+* 鍔熻兘 : ADC璇诲鐩婂瘎瀛樺櫒
+* 杈撳叆 : 鏃?
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 鏃?
 ***********************************************************************/
 void adc_Read_Gain_Register(void)
 {
@@ -270,13 +280,13 @@ void adc_Read_Gain_Register(void)
 	
 	CMD.BYTE = 0x00;
 	
-	//1.设置命令寄存器
-	CMD.BIT.REG = REG_GAIN;						//选择增益寄存器
-	CMD.BIT.RW  = RW_READ;						//读操作
-	CMD.BIT.MC  = 0;							//模式写0
-	CMD.BIT.B7  = 0;							//最高位写0	
+	//1.璁剧疆鍛戒护瀵勫瓨鍣?
+	CMD.BIT.REG = REG_GAIN;						//閫夋嫨澧炵泭瀵勫瓨鍣?
+	CMD.BIT.RW  = RW_READ;						//璇绘搷浣?
+	CMD.BIT.MC  = 0;							//妯″紡鍐?
+	CMD.BIT.B7  = 0;							//鏈€楂樹綅鍐?	
 
-	//2.读取寄存器数据
+	//2.璇诲彇瀵勫瓨鍣ㄦ暟鎹?
 	NSS_RESET;									//CS = 0
 	spi_Write_Byte(CMD.BYTE);				
 	delay_us(10);
@@ -288,11 +298,11 @@ void adc_Read_Gain_Register(void)
 	NSS_SET;									//CS = 1		
 }
 /**********************************************************************
-* 名称 : adc_Write_Offset_Register(long int r_Value)
-* 功能 : ADC写偏移寄存器
-* 输入 : r_Value -- 寄存器数据
-* 输出 ：无
-* 说明 : 无
+* 鍚嶇О : adc_Write_Offset_Register(long int r_Value)
+* 鍔熻兘 : ADC鍐欏亸绉诲瘎瀛樺櫒
+* 杈撳叆 : r_Value -- 瀵勫瓨鍣ㄦ暟鎹?
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 鏃?
 ***********************************************************************/
 void adc_Write_Offset_Register(long int r_Value)
 {
@@ -300,13 +310,13 @@ void adc_Write_Offset_Register(long int r_Value)
 	
 	CMD.BYTE = 0x00;
 	
-	//1.设置命令寄存器
-	CMD.BIT.REG = REG_OFFSET;					//选择偏移寄存器
-	CMD.BIT.RW  = RW_WRITE;						//写操作
-	CMD.BIT.MC  = 0;							//模式写0
-	CMD.BIT.B7  = 0;							//最高位写0			
+	//1.璁剧疆鍛戒护瀵勫瓨鍣?
+	CMD.BIT.REG = REG_OFFSET;					//閫夋嫨鍋忕Щ瀵勫瓨鍣?
+	CMD.BIT.RW  = RW_WRITE;						//鍐欐搷浣?
+	CMD.BIT.MC  = 0;							//妯″紡鍐?
+	CMD.BIT.B7  = 0;							//鏈€楂樹綅鍐?			
 	
-	//2.写入寄存器数据
+	//2.鍐欏叆瀵勫瓨鍣ㄦ暟鎹?
 	//NSS_RESET;									//CS = 0
 	CS1_RESET;
 	CS2_RESET;
@@ -324,23 +334,23 @@ void adc_Write_Offset_Register(long int r_Value)
 	CS3_SET;	
 }
 /**********************************************************************
-* 名称 : adc_Start(unsigned char nMODE)
-* 功能 : ADC启动转换
-* 输入 : nMODE -- 转换模式
-* 输出 ：无
-* 说明 : 无
+* 鍚嶇О : adc_Start(unsigned char nMODE)
+* 鍔熻兘 : ADC鍚姩杞崲
+* 杈撳叆 : nMODE -- 杞崲妯″紡
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 鏃?
 ***********************************************************************/
 void adc_Start(unsigned char nMODE)
 {
 	CMD.BYTE = 0x00;
 	
-	//1.设置命令寄存器
+	//1.璁剧疆鍛戒护瀵勫瓨鍣?
 	CMD.BIT.REG = 0x00;						
 	CMD.BIT.RW  = 0x00;							
-	CMD.BIT.MC  = nMODE;						//设置转换模式
-	CMD.BIT.B7  = 1;							//最高位写1
+	CMD.BIT.MC  = nMODE;						//璁剧疆杞崲妯″紡
+	CMD.BIT.B7  = 1;							//鏈€楂樹綅鍐?
 	
-	//2.写入模式并启动转换
+	//2.鍐欏叆妯″紡骞跺惎鍔ㄨ浆鎹?
 	//NSS_RESET;									//CS = 0
 	CS1_RESET;
 	CS2_RESET;
@@ -352,48 +362,48 @@ void adc_Start(unsigned char nMODE)
 	CS3_SET;	
 }
 /**********************************************************************
-* 名称 : adc_Initl(void)
-* 功能 : ADC初始化函数
-* 输入 : 无
-* 输出 ：无
-* 说明 : 无
+* 鍚嶇О : adc_Initl(void)
+* 鍔熻兘 : ADC鍒濆鍖栧嚱鏁?
+* 杈撳叆 : 鏃?
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 鏃?
 ***********************************************************************/
 void adc_Initl(void)
 {
-	adc_sw_Reset();								//复位ADC
+	adc_sw_Reset();								//澶嶄綅ADC
 	//printf("adc_sw_Reset");
 	//delay_ms(1);
-	adc_Write_CFG_Register(ADC_VREF,FRS_Mode,WR_60Hz,Bipolar);		//设置配置寄存器
+	adc_Write_CFG_Register(ADC_VREF,FRS_Mode,WR_60Hz,Bipolar);		//璁剧疆閰嶇疆瀵勫瓨鍣?
 	//printf("adc_Write_CFG_Register");
 	//delay_ms(1);
-	adc_Write_Offset_Register(0x00000000);		//写偏移寄存器	
+	adc_Write_Offset_Register(0x00000000);		//鍐欏亸绉诲瘎瀛樺櫒	
 	//printf("adc_Write_Offset_Register");
 	//delay_ms(1);
-	adc_Write_Gain_Register(0x01000000);		//写增益寄存器
+	adc_Write_Gain_Register(0x01000000);		//鍐欏鐩婂瘎瀛樺櫒
 	//printf("adc_Write_Gain_Register");
 	//delay_ms(1);
-	adc_Start(MC_CONV);							//启动转换
+	adc_Start(MC_CONV);							//鍚姩杞崲
 	cs5530.csChannel = cs5530Channel1;
 	CS1_RESET;
 	//printf("adc_Start");
 }
 /**********************************************************************
-* 名称 : adc_Read_Data_Register(void)
-* 功能 : ADC读数据寄存器函数
-* 输入 : 无
-* 输出 ：无
-* 说明 : 无
+* 鍚嶇О : adc_Read_Data_Register(void)
+* 鍔熻兘 : ADC璇绘暟鎹瘎瀛樺櫒鍑芥暟
+* 杈撳叆 : 鏃?
+* 杈撳嚭 锛氭棤
+* 璇存槑 : 鏃?
 ***********************************************************************/
 signed long int adc_Read_Data_Register(void)
 {
 	signed long int REG_Value = 0x00;
 	
-	DATA_H.WORD = DATA_L.WORD = 0x00;			//清除寄存器数据
+	DATA_H.WORD = DATA_L.WORD = 0x00;			//娓呴櫎瀵勫瓨鍣ㄦ暟鎹?
 	
-	//1.等待ADC转换完成
+	//1.绛夊緟ADC杞崲瀹屾垚
 //	while(RDY != 0);							//RDY = 0???
 	
-	//2.读取ADC数据寄存器数据
+	//2.璇诲彇ADC鏁版嵁瀵勫瓨鍣ㄦ暟鎹?
 //	NSS = 0;									delay_us(10);
 	spi_Write_Byte(CMD_NULL);					delay_us(1);    	
 	
@@ -429,16 +439,16 @@ signed long int adc_Read_Data_Register(void)
 
 //	printf("REG_Value:0x%4x\r\n",REG_Value);
 //	printf("REG_Value>>8:0x%4x\r\n",((REG_Value >> 8)&0x00FFFFFF));
-	//3.判断是否超量程
-	if(DATA_L.BIT.OF == 1)						//超过量程
+	//3.鍒ゆ柇鏄惁瓒呴噺绋?
+	if(DATA_L.BIT.OF == 1)						//瓒呰繃閲忕▼
 	{
-		//用户自行添加代码！！！！
+		//鐢ㄦ埛鑷娣诲姞浠ｇ爜锛侊紒锛侊紒
 	}
 	
-	return(REG_Value);		   				//输出数据(舍弃低8位)	
+	return(REG_Value);		   				//杈撳嚭鏁版嵁(鑸嶅純浣?浣?	
 }
 
-#define CS5530_V_SCALE 39.0625 //mV 2500 / 64   2500对应2^23 - 1;5000对应2^24 - 1;	
+#define CS5530_V_SCALE 39.0625 //mV 2500 / 64   2500瀵瑰簲2^23 - 1;5000瀵瑰簲2^24 - 1;	
 
 void cs5530MultiCollect(uint8_t channel)
 {
@@ -469,11 +479,11 @@ void cs5530MultiCollect(uint8_t channel)
 
 void cs5530Init(void){
 	cs5530.runState = cs5530NoStart;
-	delay_init(HAL_RCC_GetSysClockFreq());//软件延时初始化
+	delay_init(HAL_RCC_GetSysClockFreq());//杞欢寤舵椂鍒濆鍖?
 	//HAL_NVIC_DisableIRQ(P_ADCMISO_EXTI_IRQn);
-	spi_io_Initl();						//软件SPI初始化
+	spi_io_Initl();						//杞欢SPI鍒濆鍖?
 	//delay_ms(10);
-	adc_Initl();						//初始化CS5530
+	adc_Initl();						//鍒濆鍖朇S5530
 	cs5530.runState = cs5530RunNormal;
 }
 	
@@ -549,4 +559,90 @@ void cs5530ResetMonitor(void){
 	for(;i<3;i++){
 		_CodeRecord[i] = cs5530.Code[i];
 	}
+}
+#endif
+
+#include "CS553X.h"
+
+cs5530_t cs5530;
+
+static void cs5530CompatClearData(void)
+{
+    uint8_t i;
+
+    for (i = 0; i < cs5530ChannelNumMax; i++) {
+        cs5530.Code[i] = 0;
+        cs5530.Voltage[i] = 0.0f;
+        cs5530.Value[i] = 0.0f;
+    }
+}
+
+void adc_sw_Reset(void)
+{
+    /* CS5530 retired: wait for CS5552 implementation. */
+}
+
+void adc_Write_CFG_Register(unsigned char nVREF,
+                            unsigned char nFRS,
+                            unsigned char nWRX,
+                            unsigned char nUB)
+{
+    (void)nVREF;
+    (void)nFRS;
+    (void)nWRX;
+    (void)nUB;
+}
+
+void adc_Read_CFG_Register(void)
+{
+}
+
+void adc_Write_Gain_Register(long int g_Value)
+{
+    (void)g_Value;
+}
+
+void adc_Read_Gain_Register(void)
+{
+}
+
+void adc_Write_Offset_Register(long int r_Value)
+{
+    (void)r_Value;
+}
+
+void adc_Initl(void)
+{
+    cs5530.csChannel = cs5530Channel1;
+    cs5530CompatClearData();
+}
+
+signed long int adc_Read_Data_Register(void)
+{
+    return 0;
+}
+
+void cs5530MultiCollect(uint8_t channel)
+{
+    (void)channel;
+}
+
+void cs5530Init(void)
+{
+    cs5530.runState = cs5530NoStart;
+    cs5530.csChannel = cs5530Channel1;
+    cs5530CompatClearData();
+}
+
+void cs5530DataProcess(uint8_t channel)
+{
+    (void)channel;
+}
+
+void cs5530DataGet(void)
+{
+}
+
+void cs5530ResetMonitor(void)
+{
 }

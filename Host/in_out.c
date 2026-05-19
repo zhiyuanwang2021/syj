@@ -16,7 +16,7 @@
 #include "lsm.h"
 #include <elog.h>
 #include "adrc.h"
-#include "CS553X.h"
+// #include "CS553X.h"  // Legacy CS5530 header disabled during CS5552 migration.
 
 HAL_OUTPUT hal_output;
 DOTypeDef openloopDO;
@@ -78,7 +78,7 @@ void emergency_scram_button_process(void);
 void DI_map(HAL_DI_STRUCT *x);
 void DB9_map(HAL_DB9_STRUCT *x);
 void ServoIO_map(HAL_DI_STRUCT *x);
-void MD_CODE_map(ads1274_t *par,cs5530_t *_cs5530, ENCODER_STRUCT *encdr, uint8_t SensorMapNum[3]);
+void MD_CODE_map(ads1274_t *par, ENCODER_STRUCT *encdr, uint8_t SensorMapNum[3]);
 /*DI Function map*/
 void DIFuncMap_init(void);
 void DIFunc_map(void);
@@ -97,7 +97,8 @@ void inputGetValue()
 	//ADS1274_Data_Process(&ads1274_par);
 	extern uint16_t time13Count;
 	__HAL_TIM_SetCounter(&htim13, 0);
-	cs5530DataGet();
+	// Legacy CS5530 sampling path disabled during CS5552 migration.
+	// cs5530DataGet();
 	time13Count = __HAL_TIM_GetCounter(&htim13);
 	// DI
 	DIDetect_ReadALL();
@@ -117,7 +118,7 @@ void inputMapping(){
 	// CON ADJ monitor
 	sensorCON_ADJ_Monitor(&DB9);
 	// measure data code value mapping
-	MD_CODE_map(&ads1274_par,&cs5530, &encoder, sensorCheck.MapNum);
+	MD_CODE_map(&ads1274_par, &encoder, sensorCheck.MapNum);
 	// sensor settare monitor
 	SetTareMonitor(&AL);
 	// pose calculate
@@ -226,23 +227,20 @@ void outputControl()
  * @param[in] par ADS1274 sample value
  * @param[in] encdr encoder struct
  */
-void MD_CODE_map(ads1274_t *par,cs5530_t *_cs5530, ENCODER_STRUCT *encdr, uint8_t SensorMapNum[3])
+void MD_CODE_map(ads1274_t *par, ENCODER_STRUCT *encdr, uint8_t SensorMapNum[3])
 {
-	if (SensorMapNum[0] == SENSOR_NO_CHANNEL)
-		force.code = 0;//这里可以根据记录的真实值，改成反向查表，对code赋值
-	else
-		force.code = _cs5530->Code[cs5530Channel2] - AL.tare.value[ch4Load];
-		//force.code = par->valueFilter[SensorMapNum[0]];
-	if (SensorMapNum[1] == SENSOR_NO_CHANNEL)
-		strain1.code = 0;//这里可以根据记录的真实值，改成反向查表，对code赋值
-	else
-		strain1.code = _cs5530->Code[cs5530Channel1] - AL.tare.value[ch2Ext1];
-		//strain1.code = par->valueFilter[SensorMapNum[1]];
-	if (SensorMapNum[2] == SENSOR_NO_CHANNEL)
-		strain2.code = 0;//这里可以根据记录的真实值，改成反向查表，对code赋值
-	else
-		strain2.code = _cs5530->Code[cs5530Channel3] - AL.tare.value[ch3Ext2];
-		//strain2.code = par->valueFilter[SensorMapNum[2]];
+	(void)par;
+	(void)encdr;
+	(void)SensorMapNum;
+
+	/*
+	 * Legacy CS5530 backend is disabled.
+	 * Keep the application mapping point here so CS5552 can restore:
+	 * channel1 -> strain1, channel2 -> force, channel3 -> strain2.
+	 */
+	force.code = 0;
+	strain1.code = 0;
+	strain2.code = 0;
 
 	//pose.code = encdr->count0;
 }

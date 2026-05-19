@@ -47,7 +47,7 @@
 
 #include "delay.h"
 #include "io_spi.h"
-#include "cs553X.h"
+// #include "cs553X.h"  // Legacy CS5530 header disabled during CS5552 migration.
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -103,7 +103,8 @@ void hardwareInit(void){
   RS485_init(&huart2);
   // ADC init
 	// ADS1274_Init();
-  cs5530Init();
+  // Legacy CS5530 init path disabled during CS5552 migration.
+  // cs5530Init();
   //Eth fifo init
 	fifo_init(&rev_fifo);
   //Encoder init
