@@ -39,6 +39,7 @@
             "defines": [
                 "USE_HAL_DRIVER",
                 "STM32H750xx",
+                "USE_PWR_LDO_SUPPLY",
                 "__CC_ARM",
                 "__arm__",
                 "__align(x)=",
