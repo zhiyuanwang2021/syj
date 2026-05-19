@@ -1,7 +1,8 @@
 #ifndef  __CS553X_H__
 #define  __CS553X_H__
 
-#include "IO_SPI.h"							//IO模拟SPI
+// #include "IO_SPI.h"                          // Legacy CS5530 bit-banged SPI disabled during CS5552 migration.
+#include "main.h"
 //#include "F10x_UART1.h"						//UART1
 /****************************端口定义*********************************/
 //1.转换完成信号检测

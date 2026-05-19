@@ -45,8 +45,8 @@
 #include "adrc.h"
 #include "modbus_slave.h"
 
-#include "delay.h"
-#include "io_spi.h"
+// #include "delay.h"   // Legacy CS5530 software-SPI delay helper disabled during CS5552 migration.
+// #include "io_spi.h"  // Legacy CS5530 software-SPI GPIO driver disabled during CS5552 migration.
 // #include "cs553X.h"  // Legacy CS5530 header disabled during CS5552 migration.
 /* USER CODE END Includes */
 
