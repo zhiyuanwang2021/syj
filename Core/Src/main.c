@@ -387,7 +387,7 @@ void MPU_Config(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
-//	if(htim->Instance==htim6.Instance)		              //1usÖÐ¶Ï
+//	if(htim->Instance==htim6.Instance)		              //1usä¸­æ–­
 //	{
 //		tim6us++;
 //		if(tim6us >= 65535)
