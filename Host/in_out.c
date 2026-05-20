@@ -16,7 +16,7 @@
 #include "lsm.h"
 #include <elog.h>
 #include "adrc.h"
-// #include "CS553X.h"  // Legacy CS5530 header disabled during CS5552 migration.
+#include "CS553X.h"
 
 HAL_OUTPUT hal_output;
 DOTypeDef openloopDO;
@@ -97,8 +97,7 @@ void inputGetValue()
 	//ADS1274_Data_Process(&ads1274_par);
 	extern uint16_t time13Count;
 	__HAL_TIM_SetCounter(&htim13, 0);
-	// Legacy CS5530 sampling path disabled during CS5552 migration.
-	// cs5530DataGet();
+	cs5530DataGet();
 	time13Count = __HAL_TIM_GetCounter(&htim13);
 	// DI
 	DIDetect_ReadALL();
@@ -177,7 +176,7 @@ void inputMapping(){
 #define EXTEN_PROTECT_MIN -2.0f
 void outputMapping()
 {
-	sensorProtectState_e extps = SENPS_noProtect;
+	// sensorProtectState_e extps = SENPS_noProtect;
 	// openloop mapping
 	if (stateFlag.openloop == 1) // OPENLOOP
 		openloopOutputMap(&OutputPara);
@@ -231,16 +230,22 @@ void MD_CODE_map(ads1274_t *par, ENCODER_STRUCT *encdr, uint8_t SensorMapNum[3])
 {
 	(void)par;
 	(void)encdr;
-	(void)SensorMapNum;
+
+	if (SensorMapNum[0] == SENSOR_NO_CHANNEL)
+		force.code = 0;
+	else
+		force.code = cs5530.Code[cs5530Channel2] - AL.tare.value[ch4Load];
 
 	/*
-	 * Legacy CS5530 backend is disabled.
-	 * Keep the application mapping point here so CS5552 can restore:
-	 * channel1 -> strain1, channel2 -> force, channel3 -> strain2.
+	 * Current CS5552 migration does not use chip0.ch0,
+	 * so strain1 is intentionally kept at zero for now.
 	 */
-	force.code = 0;
 	strain1.code = 0;
-	strain2.code = 0;
+
+	if (SensorMapNum[2] == SENSOR_NO_CHANNEL)
+		strain2.code = 0;
+	else
+		strain2.code = cs5530.Code[cs5530Channel3] - AL.tare.value[ch3Ext2];
 
 	//pose.code = encdr->count0;
 }
@@ -644,7 +649,7 @@ uint16_t loadFilterSwitch(uint8_t Wm, uint16_t MaxFiterLen, uint16_t FilterDepth
 void loadFilterWithLenSwitch(MDSTRUCT *x, FILTER *filter, uint16_t filter_depth)
 {
 	static uint16_t i = 0, depthLast = FILTER_LEN, k = 0;
-	uint16_t j, m;
+	uint16_t  m;
 
 	x->filter_last = x->filter;
 	if (depthLast > filter_depth)
@@ -711,7 +716,7 @@ void loadFilterWithLenSwitch(MDSTRUCT *x, FILTER *filter, uint16_t filter_depth)
 void load_filter_SL2(uint16_t filter_depth)
 {
 	static uint16_t i = 0, depthLast = FILTER_LEN2;
-	uint16_t j;
+	// uint16_t j;
 	i++;
 	if (i >= FILTER_LEN2)
 		i = 0;
@@ -832,7 +837,7 @@ void extensometerFilterWithLenSwitch(MDSTRUCT *_x,MDSTRUCT *_xLsm ,
 									const uint16_t _filter_depth)
 {
 	static uint16_t i = 0, depthLast = STRAIN_FILTER_LEN,k = 0;
-	uint16_t j, m;
+	uint16_t  m;
 
 	_x->filter_last = _x->filter;
 	if (depthLast > _filter_depth)
@@ -879,7 +884,7 @@ void extensometerFilterWithLenSwitch(MDSTRUCT *_x,MDSTRUCT *_xLsm ,
 
 	depthLast = _filter_depth;
 	_x->codeFiter_last = _x->codeFiter;
-	_x->codeFiter = (int32_t)(_x->filter * _AL->ext1Ctrl.sign * 1.0 * _AL->ext1Ctrl.NominalSensitive / ADC_FACTOR_ROUND / _AL->ext1Ctrl.NominalValue + _AL->tare.value[ch2Ext1]);
+	_x->codeFiter = (int32_t)(_x->filter * _AL->ext1Ctrl.sign * 1.0f * _AL->ext1Ctrl.NominalSensitive / ADC_FACTOR_ROUND / _AL->ext1Ctrl.NominalValue + _AL->tare.value[ch2Ext1]);
 }
 
 /**
@@ -968,7 +973,7 @@ void extensometer2FilterWithLenSwitch(MDSTRUCT *_x,MDSTRUCT *_xLsm,
 									const uint16_t _filter_depth)
 {
 	static uint16_t i = 0, depthLast = STRAIN_FILTER_LEN,k = 0;
-	uint16_t j, m;
+	uint16_t  m;
 
 	_x->filter_last = _x->filter;
 	if (depthLast > _filter_depth)
@@ -1015,7 +1020,7 @@ void extensometer2FilterWithLenSwitch(MDSTRUCT *_x,MDSTRUCT *_xLsm,
 
 	depthLast = _filter_depth;
 	_x->codeFiter_last = _x->codeFiter;
-	_x->codeFiter = (int32_t)(_x->filter * _AL->ext2Ctrl.sign * 1.0 * _AL->ext2Ctrl.NominalSensitive / ADC_FACTOR_ROUND / _AL->ext2Ctrl.NominalValue + _AL->tare.value[ch2Ext1]);
+	_x->codeFiter = (int32_t)(_x->filter * _AL->ext2Ctrl.sign * 1.0f * _AL->ext2Ctrl.NominalSensitive / ADC_FACTOR_ROUND / _AL->ext2Ctrl.NominalValue + _AL->tare.value[ch2Ext1]);
 }
 
 /**
@@ -1162,11 +1167,11 @@ void openloopOutputMap(OUTPUTPARA *op)
 void outputSignalConstraint(float *out, float max, float min, float range)
 {
 	float tmp;
-	if (*out > (tmp = (max / 100.0 * range)))
+	if (*out > (tmp = (max / 100.0f * range)))
 	{
 		*out = (float)tmp;
 	}
-	else if (*out < (tmp = (min / 100.0 * range)))
+	else if (*out < (tmp = (min / 100.0f * range)))
 	{
 		*out = (float)tmp;
 	}
@@ -1182,11 +1187,11 @@ void outputSignalOffset(float *out, float offset, float range)
 {
 	if (*out > 0)
 	{
-		*out = *out + offset / 100.0 * range;
+		*out = *out + offset / 100.0f * range;
 	}
 	else if (*out < 0)
 	{
-		*out = *out - offset / 100.0 * range;
+		*out = *out - offset / 100.0f * range;
 	}
 }
 
@@ -1198,7 +1203,7 @@ void outputSignalOffset(float *out, float offset, float range)
  */
 void outputSignalInitValue(float *out, float initValue, float range)
 {
-	*out = initValue / 100.0 * range;
+	*out = initValue / 100.0f * range;
 }
 
 /**
@@ -1246,9 +1251,9 @@ extern uint16_t pwmFinishcounter;
  */
 void closeloopOutputMap(OUTPUTPARA *op)
 {
-	int32_t tmp = 0, j = 0;
-	uint32_t utmp = 0;
-	static int32_t fclkcounters;
+	int32_t  j = 0;
+	// uint32_t utmp = 0;
+	// static int32_t fclkcounters;
 	// map hal DO
 	halDOMap(&hal_output.DO, &DO);
 	// PWM AO mapping
@@ -1356,11 +1361,11 @@ void SONMap(void)
 	if(stateFlag.openloop == 0){
 		if (stateFlag.DoPE_state == DoPE_On && AL.emergency_state.processing == 0)
 		{
-			DO.SON = 1;
+			DO.SON = GPIO_PIN_SET;
 		}
 		else
 		{
-			DO.SON = 0;
+			DO.SON = GPIO_PIN_RESET;
 		}
 	}
 	// //Hardware limit

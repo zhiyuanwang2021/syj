@@ -144,7 +144,7 @@ void sendata_update(void)
 	switch(sensorConnector)
 	{
 		case 0x00://Pos
-			AL.posCtrl.NominalSensitive = pose_calibrate_process();//位置校正系数更新
+			AL.posCtrl.NominalSensitive = pose_calibrate_process();//浣嶇疆鏍℃绯绘暟鏇存柊
 			if(SenData[ch0Pose].Sign == 0x01)
 				AL.posCtrl.sign = -1;
 			else
@@ -157,14 +157,14 @@ void sendata_update(void)
 			}
 		break;
 		case 0x01://Bigdeformation
-			// AL.ext1Ctrl.NominalSensitive = ext1_calibrate_process();//位置校正系数更新
+			// AL.ext1Ctrl.NominalSensitive = ext1_calibrate_process();//浣嶇疆鏍℃绯绘暟鏇存柊
 			// if(SenData[ch2Ext1].Sign == 0x01)
 			// 	;
 			// else
 			// 	;
 		break;
 		case 0x02://Ext1
-			AL.ext1Ctrl.NominalSensitive = ext1_calibrate_process();//位置校正系数更新
+			AL.ext1Ctrl.NominalSensitive = ext1_calibrate_process();//浣嶇疆鏍℃绯绘暟鏇存柊
 			AL.ext1Ctrl.NominalValue = SenData[ch2Ext1].NominalValue;
 			if(SenData[ch2Ext1].Sign == 0x01)
 				AL.ext1Ctrl.sign = -1;
@@ -176,7 +176,7 @@ void sendata_update(void)
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
 					temp = SenData[sensorConnector].LinV[j].CorrectionFactor;
-					SenData[sensorConnector].LinV[j].CorrectionFactor = 1 / SenData[sensorConnector].LinV[j].CorrectionFactor
+					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
 												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalValue;	
 					//printf("Num:%d Temp:%f,%f\r\n",j,temp,SenData[sensorConnector].LinV[j].CorrectionFactor);												
 				}
@@ -186,7 +186,7 @@ void sendata_update(void)
 			}
 		break;
 		case 0x03://Ext2
-			AL.ext2Ctrl.NominalSensitive = ext2_calibrate_process();//位置校正系数更新
+			AL.ext2Ctrl.NominalSensitive = ext2_calibrate_process();//浣嶇疆鏍℃绯绘暟鏇存柊
 			AL.ext2Ctrl.NominalValue = SenData[ch3Ext2].NominalValue;
 			if(SenData[ch3Ext2].Sign == 0x01)
 				AL.ext2Ctrl.sign = -1;
@@ -197,7 +197,7 @@ void sendata_update(void)
 			if(SenData[ch3Ext2].LinPoint > 0){
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
-					SenData[sensorConnector].LinV[j].CorrectionFactor = 1 / SenData[sensorConnector].LinV[j].CorrectionFactor
+					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
 												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalSensitive;													
 				}
 				sensorCalibrate.multipointZeroCodeUpdate(ch3Ext2,&SenData[ch3Ext2],&sensorCalibrate.zeroCode[ch3Ext2]);
@@ -206,7 +206,7 @@ void sendata_update(void)
 			}
 		break;
 		case 0x04://Load
-			AL.loadCtrl.NominalSensitive = load_calibrate_process();//载荷校正系数更新
+			AL.loadCtrl.NominalSensitive = load_calibrate_process();//杞借嵎鏍℃绯绘暟鏇存柊
 			AL.loadCtrl.NominalValue = SenData[ch4Load].NominalValue;
 			if(SenData[ch4Load].Sign == 0x01)
 				AL.loadCtrl.sign = -1;
@@ -217,7 +217,7 @@ void sendata_update(void)
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
 					temp = SenData[sensorConnector].LinV[j].CorrectionFactor;	
-					SenData[sensorConnector].LinV[j].CorrectionFactor = 1 / SenData[sensorConnector].LinV[j].CorrectionFactor
+					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
 												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalValue * 1000.0f;	
 					//printf("Num:%d Temp:%f,%f\r\n",j,temp,SenData[sensorConnector].LinV[j].CorrectionFactor);						
 				}
@@ -833,7 +833,7 @@ static float singlepointCalibrateFunc(  const int32_t _code,
 		*_orig = strain2.origTare - AL.tare.fValue[ch3Ext2];
 		break;
 	case ch4Load:
-		force.origTare = AL.loadCtrl.sign * ((ADC_FACTOR_CS5530_ROUND * 1000.0)  * _code
+		force.origTare = AL.loadCtrl.sign * ((ADC_FACTOR_CS5530_ROUND * 1000.0f)  * _code
 				/ AL.loadCtrl.NominalSensitive * AL.loadCtrl.NominalValue);
 		*_orig = force.origTare - AL.tare.fValue[ch4Load];
 		break;
@@ -870,13 +870,13 @@ static int32_t antiSinglepointCalibrateFunc(const float _orig,
 		*_code = 0x7777;
 		break;
 	case ch2Ext1:
-		*_code = (int32_t)((_orig + AL.tare.fValue[ch2Ext1]) * AL.ext1Ctrl.NominalSensitive * AL.ext1Ctrl.sign / AL.ext1Ctrl.NominalValue * 1.0 / ADC_FACTOR_CS5530_ROUND);
+		*_code = (int32_t)((_orig + AL.tare.fValue[ch2Ext1]) * AL.ext1Ctrl.NominalSensitive * AL.ext1Ctrl.sign / AL.ext1Ctrl.NominalValue * 1.0f / ADC_FACTOR_CS5530_ROUND);
 		break;
 	case ch3Ext2:
-		*_code = (int32_t)((_orig + AL.tare.fValue[ch3Ext2]) * AL.ext2Ctrl.NominalSensitive * AL.ext2Ctrl.sign / AL.ext2Ctrl.NominalValue * 1.0 / ADC_FACTOR_CS5530_ROUND);
+		*_code = (int32_t)((_orig + AL.tare.fValue[ch3Ext2]) * AL.ext2Ctrl.NominalSensitive * AL.ext2Ctrl.sign / AL.ext2Ctrl.NominalValue * 1.0f / ADC_FACTOR_CS5530_ROUND);
 		break;
 	case ch4Load:
-		*_code = (int32_t)((_orig + AL.tare.fValue[ch4Load]) * AL.loadCtrl.NominalSensitive * AL.loadCtrl.sign / AL.loadCtrl.NominalValue * 1.0 / (ADC_FACTOR_CS5530_ROUND*1000.0));
+		*_code = (int32_t)((_orig + AL.tare.fValue[ch4Load]) * AL.loadCtrl.NominalSensitive * AL.loadCtrl.sign / AL.loadCtrl.NominalValue * 1.0f / (ADC_FACTOR_CS5530_ROUND * 1000.0f));
 		break;
 	default:
 		break;

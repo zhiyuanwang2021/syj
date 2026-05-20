@@ -146,12 +146,6 @@ void Error_Handler(void);
 #define P_DI7_GPIO_Port GPIOA
 #define P_ADCCLK_Pin GPIO_PIN_15
 #define P_ADCCLK_GPIO_Port GPIOA
-#define P_ADCSCLK_Pin GPIO_PIN_10
-#define P_ADCSCLK_GPIO_Port GPIOC
-#define P_ADCMISO_Pin GPIO_PIN_11
-#define P_ADCMISO_GPIO_Port GPIOC
-#define P_ADCMOSI_Pin GPIO_PIN_12
-#define P_ADCMOSI_GPIO_Port GPIOC
 #define P_ADCCS3_Pin GPIO_PIN_0
 #define P_ADCCS3_GPIO_Port GPIOD
 #define P_ADCSYNC_Pin GPIO_PIN_1

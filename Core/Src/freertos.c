@@ -456,9 +456,9 @@ void WaveTask(void const * argument)
 {
   /* USER CODE BEGIN WaveTask */
 	//static char buffer[1024] = {0};
-	float voltage=0;
+	// float voltage=0;
   static uint32_t counter = 0;
-  static uint32_t counterInt = 0,countTaskList=0;
+  // static uint32_t counterInt = 0;
   /* Infinite loop */
   for(;;)
   {
@@ -662,7 +662,7 @@ void EthernetTask(void const * argument)
 void CDataTransTask(void const * argument)
 {
   /* USER CODE BEGIN CDataTransTask */
-	uint16_t loopCounter = 0;
+	// uint16_t loopCounter = 0;
   /* Infinite loop */
   for(;;)
   {	  

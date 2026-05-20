@@ -96,7 +96,7 @@ uint16_t buf_data_points;// 每个数据包的数据点数（解析值）
 */
 void rev_ring_fifo_pop(uint8_t *buf_data)
 {
-	uint16_t i,j,DataLen;
+	uint16_t i,DataLen;
 
 	while(rev_fifo.busy ==1)
 	{   

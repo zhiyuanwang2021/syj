@@ -82,5 +82,6 @@ void manualBoxTypeMonitor(MANUAL_BOX_STRUCT *_manualBox);
 void poseCodeCalculate_Int(MDSTRUCT *pose,const int32_t count);
 void poseSpeedFilter_Int(FILTER_INT *_filter,MDSTRUCT *_pose,MDSTRUCT *_speedPose,const uint8_t _filter_depth);
 
+void openloop_parameters_update(void);
 
 #endif

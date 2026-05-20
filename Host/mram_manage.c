@@ -669,12 +669,12 @@ uint8_t err=0,check_num=MRAM_CHECK,i=0;
 
 //these data need to be saved realtime 5200-5211
 	err += MRAM_WRITE(POSE_ENCODER_CODE_ADDR, (uint8_t*)(&pose.code), 4);
-	err += MRAM_WRITE(LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
-	err += MRAM_WRITE(EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
-	err += MRAM_WRITE(EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
-	err += MRAM_WRITE(LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
-	err += MRAM_WRITE(EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
-	err += MRAM_WRITE(EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
+	err += MRAM_WRITE(MRAM_LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
+	err += MRAM_WRITE(MRAM_LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
 
 //senserCheck 5400-5405
 	err += MRAM_WRITE(SENSOR_CHECK_REGISTER0_ADDR, (uint8_t*)(&sensorCheck.Register[0]), 1);
@@ -894,12 +894,12 @@ uint8_t err=0,check_num=MRAM_CHECK,i=0;
 
 //these data need to be saved realtime 5200-5211
 	err += MRAM_READ(POSE_ENCODER_CODE_ADDR, (uint8_t*)(&pose.code), 4);
-	err += MRAM_READ(LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
-	err += MRAM_READ(EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
-	err += MRAM_READ(EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
-	err += MRAM_READ(LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
-	err += MRAM_READ(EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
-	err += MRAM_READ(EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
+	err += MRAM_READ(MRAM_LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
+	err += MRAM_READ(MRAM_EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
+	err += MRAM_READ(MRAM_EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
+	err += MRAM_READ(MRAM_LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
+	err += MRAM_READ(MRAM_EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
+	err += MRAM_READ(MRAM_EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
 
 //senserCheck 5400-5405
 	err += MRAM_READ(SENSOR_CHECK_REGISTER0_ADDR, (uint8_t*)(&sensorCheck.Register[0]), 1);
@@ -980,12 +980,12 @@ uint8_t mramSensorCodeWrite(void)
 {	
 	uint8_t err=0;
 	err += MRAM_WRITE(POSE_ENCODER_CODE_ADDR, (uint8_t*)(&pose.code), 4);
-	err += MRAM_WRITE(LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
-	err += MRAM_WRITE(EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
-	err += MRAM_WRITE(EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
-	err += MRAM_WRITE(LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
-	err += MRAM_WRITE(EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
-	err += MRAM_WRITE(EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
+	err += MRAM_WRITE(MRAM_LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
+	err += MRAM_WRITE(MRAM_LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
+	err += MRAM_WRITE(MRAM_EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
 
 
 	if(err > 0)
@@ -1002,12 +1002,12 @@ uint8_t mramSensorCodeRead(void)
 {	
 	uint8_t err=0;
 	err += MRAM_READ(POSE_ENCODER_CODE_ADDR, (uint8_t*)(&pose.code), 4);
-	err += MRAM_READ(LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
-	err += MRAM_READ(EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
-	err += MRAM_READ(EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
-	err += MRAM_READ(LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
-	err += MRAM_READ(EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
-	err += MRAM_READ(EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
+	err += MRAM_READ(MRAM_LOAD_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch4Load]), 4);
+	err += MRAM_READ(MRAM_EXTEN_TARE_VALUE_ADDR, (uint8_t*)(&AL.tare.fValue[ch2Ext1]), 4);
+	err += MRAM_READ(MRAM_EXTEN2_TARE_VALUE_ADDR,(uint8_t*)(&AL.tare.fValue[ch3Ext2]), 4);
+	err += MRAM_READ(MRAM_LOAD_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch4Load]), 4);
+	err += MRAM_READ(MRAM_EXTEN_TARE_CODE_ADDR,(uint8_t*)(&AL.tare.value[ch2Ext1]), 4);
+	err += MRAM_READ(MRAM_EXTEN2_TARE_CODE_ADDR, (uint8_t*)(&AL.tare.value[ch3Ext2]), 4);
 	if(err > 0)
 		log_e("mram sensor code read:%d\r\n",err);
 	return err;

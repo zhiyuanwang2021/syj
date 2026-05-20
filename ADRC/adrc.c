@@ -70,7 +70,7 @@ void adrcFhanInputUpdate(FHAN_STRUCT *fhan,double x1,double x2,double r,double h
 /**
  * @brief fhan
 */
-float adrcFhan(FHAN_STRUCT *fhan_Input)//°²ÅÅADRC¹ý¶È¹ý³Ì
+float adrcFhan(FHAN_STRUCT *fhan_Input)//å®‰æŽ’ADRCè¿‡åº¦è¿‡ç¨‹
 {
   double d=0,a0=0,y=0,a1=0,a2=0,a=0;
   float output=0;
@@ -81,12 +81,12 @@ float adrcFhan(FHAN_STRUCT *fhan_Input)//°²ÅÅADRC¹ý¶È¹ý³Ì
   a2=a0+sign(y)*(a1-d)/2;//a2=a0+sign(y)*(a1-d)/2;
   a=(a0+y)*adrcFsg(y,d)+a2*(1-adrcFsg(y,d));
   fhan_Input->fh=-fhan_Input->r*(a/d)*adrcFsg(a,d)
-                  -fhan_Input->r*sign(a)*(1-adrcFsg(a,d));//µÃµ½×îËÙÎ¢·Ö¼ÓËÙ¶È¸ú×ÙÁ¿
+                  -fhan_Input->r*sign(a)*(1-adrcFsg(a,d));//å¾—åˆ°æœ€é€Ÿå¾®åˆ†åŠ é€Ÿåº¦è·Ÿè¸ªé‡
   output = (float)fhan_Input->fh;
   return output;
 }
 
-#define RAPID_FACTOR 1.05
+#define RAPID_FACTOR 1.05f
 
 /**
  * @brief adrcIntFhan
@@ -117,7 +117,7 @@ void adrcInit(leso_t* Leso,float initPose){
 */
 void adrcControlLawLoadInterlPos(float setPose,float realPose,float setSpeed,float realSpeed){
   float vt;
-    vt = (float)fabs(setSpeed*RAPID_FACTOR);
+    vt = fabsf(setSpeed * RAPID_FACTOR);
 		adrcFhanInputUpdate(&fhan,setPose-realPose,setSpeed-realSpeed,vt,posCtrlPeriod.real/1000.0);//0.05
 }
 
@@ -131,11 +131,11 @@ void adrcControlLawLoadInterlPos(float setPose,float realPose,float setSpeed,flo
 */
 void adrcControlLawPos(float setPose,float realPose,float setSpeedMax,float setSpeed,float realSpeed){
   float vt;
-	vt = (float)fabs(setSpeed*RAPID_FACTOR);
-	if(fabs(setSpeedMax) <= 0.0005){
+	vt = fabsf(setSpeed * RAPID_FACTOR);
+	if(fabsf(setSpeedMax) <= 0.0005f){
 		adrcFhanInputUpdate(&fhan,setPose-realPose,pg.aa,vt,posCtrlPeriod.real/1000.0);//r upper,h lower
-	}else if(fabs(setSpeedMax) <= 0.005){
-		vt = (float)fabs(setSpeed*1.8);
+	}else if(fabsf(setSpeedMax) <= 0.005f){
+		vt = fabsf(setSpeed * 1.8f);
 		adrcFhanInputUpdate(&fhan,(setPose-realPose),pg.aa,vt,posCtrlPeriod.real/1000.0);//0.05
 	}else{
 		adrcFhanInputUpdate(&fhan,setPose-realPose,setSpeed-realSpeed,vt,posCtrlPeriod.real/1000.0);//0.05
@@ -152,8 +152,8 @@ void adrcControlLawPos(float setPose,float realPose,float setSpeedMax,float setS
 */
 void adrcControlLawPoswithCreep(const float endPose,const float setPose,const float realPose,
                         const float setSpeedMax,const float setSpeed,const float realSpeed){
-  float vt,vm,vCreep;
-	vm = (float)fabs(setSpeedMax*RAPID_FACTOR);
+  float vt,vm;
+	vm = fabsf(setSpeedMax * RAPID_FACTOR);
   // vCreep = vm / 10.0f;
   // if(vCreep > MAX_CREEP_SPEED){
   //   vCreep = MAX_CREEP_SPEED;
@@ -168,7 +168,7 @@ void adrcControlLawPoswithCreep(const float endPose,const float setPose,const fl
   //    AL.creepFlag = 0;
     vt = vm;
  // }
-	if(fabs(setSpeedMax) <= 0.005){
+	if(fabsf(setSpeedMax) <= 0.005f){
 		adrcFhanInputUpdate(&fhan,setPose-realPose,setSpeed-realSpeed,vt,posCtrlPeriod.real/1000.0);//r upper,h lower
 	}else{
 		adrcFhanInputUpdate(&fhan,setPose-realPose,setSpeed-realSpeed,vt,posCtrlPeriod.real/1000.0);//0.05

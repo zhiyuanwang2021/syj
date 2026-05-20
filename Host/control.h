@@ -20,5 +20,6 @@ extern float MAINTANCE_test;
 void controlLoop(void);
 void EnableState_Update(void);
 void ETH_HeartbeatWatchdog(uint8_t* flag,uint16_t threshold);
+void CommandUpdate(void);
 
 #endif

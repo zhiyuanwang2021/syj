@@ -17,7 +17,7 @@ void pidInitPos(void)
     pid_pos.integral=0.0;
     pid_pos.outdeta=0.0;
     pid_pos.kp=posAllCtrlPara.PosPid.P;
-    pid_pos.ki=posAllCtrlPara.PosPid.I;         //����Ӵ��˻��ֻ��ڵ�ֵ
+    pid_pos.ki=posAllCtrlPara.PosPid.I;         //这里加大了积分环节的值
     pid_pos.kd=posAllCtrlPara.PosPid.D;
     pid_pos.uMAx=400000;
     pid_pos.uMin=0;
@@ -37,7 +37,7 @@ void pidInitLoad(void)
     pid_load.integral=0.0;
     pid_load.outdeta=0.0;
     pid_load.kp=loadAllCtrlPara.PosPid.P;
-    pid_load.ki=loadAllCtrlPara.PosPid.I;         //����Ӵ��˻��ֻ��ڵ�ֵ
+    pid_load.ki=loadAllCtrlPara.PosPid.I;         //这里加大了积分环节的值
     pid_load.kd=loadAllCtrlPara.PosPid.D;
     pid_load.uMAx=400000;
     pid_load.uMin=0;
@@ -60,7 +60,7 @@ void pidInitExt(void){
     pid_ext.integral=0.0;
     pid_ext.outdeta=0.0;
     pid_ext.kp=extAllCtrlPara.PosPid.P;
-    pid_ext.ki=extAllCtrlPara.PosPid.I;         //����Ӵ��˻��ֻ��ڵ�ֵ
+    pid_ext.ki=extAllCtrlPara.PosPid.I;         //这里加大了积分环节的值
     pid_ext.kd=extAllCtrlPara.PosPid.D;
     pid_ext.uMAx=400000;
     pid_ext.uMin=0;
@@ -73,28 +73,28 @@ void pidInitExt(void){
 
 void pidParaUpdatePos(void){
     pid_pos.kp=posAllCtrlPara.PosPid.P;
-    pid_pos.ki=posAllCtrlPara.PosPid.I;         //����Ӵ��˻��ֻ��ڵ�ֵ
+    pid_pos.ki=posAllCtrlPara.PosPid.I;         //这里加大了积分环节的值
     pid_pos.kd=posAllCtrlPara.PosPid.D;
     pidInitPos();
 }
 
 void pidParaUpdateLoad(void){
     pid_load.kp=loadAllCtrlPara.PosPid.P;
-    pid_load.ki=loadAllCtrlPara.PosPid.I;         //����Ӵ��˻��ֻ��ڵ�ֵ
+    pid_load.ki=loadAllCtrlPara.PosPid.I;         //这里加大了积分环节的值
     pid_load.kd=loadAllCtrlPara.PosPid.D;
     pidInitLoad();
 }
 
 void pidParaUpdateExt(void){
     pid_ext.kp=extAllCtrlPara.PosPid.P;
-    pid_ext.ki=extAllCtrlPara.PosPid.I;         //����Ӵ��˻��ֻ��ڵ�ֵ
+    pid_ext.ki=extAllCtrlPara.PosPid.I;         //这里加大了积分环节的值
     pid_ext.kd=extAllCtrlPara.PosPid.D;
     pidInitExt();
 }
 
 float pidCalPos(float setValue,float realValue,pid_t* pid){
 	uint8_t index = 1;
-    float K = 0;
+    // float K = 0;
 	float preOut;
     pid->setValue = setValue;
     pid->actualValue = realValue;
@@ -118,16 +118,16 @@ float pidCalLoad(double setValue,double realValue,pid_t* pid){
     static uint8_t _record = 0,modeRecord = 0;
 	int index = 1;
 	float output,preOut;
-    float _kiFenli = 0,_kpFenli = 0;
+    float kpFenli = 0;
     pid->setValue=setValue;
     pid->err=setValue-realValue;
 
     if(pid->calcuRun == 1)
     {
         index = 1;
-        // 1.���ַ��� 
-        // �����С��ʱ�����С�����ִ� 
-        // �����ʱ������󡢻���С
+        // 1.积分分离 
+        // 在误差小的时候比例小、积分大 
+        // 误差大的时候比例大、积分小
         // if(fabs(setValue-AL.loadCtrl.setPos) <= fabs(AL.loadCtrl.setPos)*0.01){
         //     pid->kiSeparate = pid->kp*0.2;
         //     pid->kpSeparate = pid->kp*0.2;
@@ -141,7 +141,7 @@ float pidCalLoad(double setValue,double realValue,pid_t* pid){
             pid->kpSeparate = pid->kp;
         //}
 
-        //2.Ŀ��㴦�����������
+        //2.目标点处结合死区控制
         //pid->integral += pid->ki*(pid->err - pid->outdeta);
         pid->integral += pid->kiSeparate*(pid->err - pid->outdeta);
         pid->index = index;
@@ -156,7 +156,7 @@ float pidCalLoad(double setValue,double realValue,pid_t* pid){
 
 float pidCalExt(double setValue,double realValue,pid_t* pid){
 	int index = 1;
-	float output,preOut;
+	float preOut;
     pid->setValue=setValue;
     pid->err=setValue-realValue;
 

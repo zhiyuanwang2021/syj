@@ -53,8 +53,8 @@ typedef struct{
 extern FILTER_LEN_STRUCT filterLen;
 
 typedef struct {
-    double S_xy;   // 保存x*y的加权和
-    double S_xx;   // 保存x2的加权和
+    double S_xy;   // 淇濆瓨x*y鐨勫姞鏉冨拰
+    double S_xx;   // 淇濆瓨x2鐨勫姞鏉冨拰
 	double k;
 } RLSState_t;
 extern RLSState_t rigidityRLS;
@@ -67,3 +67,6 @@ double leastSquareStandard(uint32_t num,LS_SLIDE_STRUCT* ls,double x,double y);
 double rigidityUpdateRLS(RLSState_t *state,const double x,const double y,const double c);
 
 #endif //_LSM_H_
+
+
+

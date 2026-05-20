@@ -1,6 +1,6 @@
 /*******************************************************************************
- *  Copyright (c) [scl]。保留所有权利�?
- *     �?文仅供个人�?�习和研究使�?，�?��?�用于商业用途�?
+ *  Copyright (c) [scl]銆備繚鐣欐墍鏈夋潈鍒╋拷?
+ *     锟�?鏂囦粎渚涗釜浜猴拷?锟戒範鍜岀爺绌朵娇锟�?锛岋拷?锟斤拷?锟界敤浜庡晢涓氱敤閫旓拷?
  ******************************************************************************/
 #include "modbus_slave.h"
 #include "in_out.h"
@@ -28,19 +28,19 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr);
 static inline uint16_t rtu_add_crc(uint8_t *ret_data, uint16_t len);
 
 void modbus_rtu_poll(uint8_t *data, uint16_t len) {
-    /*验证数据长度�?否不小于最小帧�?*/
+    /*楠岃瘉鏁版嵁闀垮害锟�?鍚︿笉灏忎簬鏈€灏忓抚锟�?*/
     sys_assert_void(len >= data_frame_min_len);
-    /*验证从机地址�?否一�?*/
+    /*楠岃瘉浠庢満鍦板潃锟�?鍚︿竴锟�?*/
     sys_assert_void(data[0] == rtu_slave->slave_addr);
-    /*数据crc校验*/
+    /*鏁版嵁crc鏍￠獙*/
     sys_assert_void(modbus_crc_compute(data, len) == 0);
     data_parse(data, &packet);
-    /*数据处理*/
-    uint16_t resp_len = 0;/*响应数据长度*/
-    uint8_t resp_code = rsp_nut_support_cmd;/*响应�?*/
+    /*鏁版嵁澶勭悊*/
+    uint16_t resp_len = 0;/*鍝嶅簲鏁版嵁闀垮害*/
+    uint8_t resp_code = rsp_nut_support_cmd;/*鍝嶅簲锟�?*/
     switch (packet.func_code) {
-        case 0x3: /*读保持寄存器*/
-        case 0x4: /*读输入寄存器*/
+        case 0x3: /*璇讳繚鎸佸瘎瀛樺櫒*/
+        case 0x4: /*璇昏緭鍏ュ瘎瀛樺櫒*/
         {
             if (packet.func_code == 0x3) {
                 resp_code = mb_rtu_ret(rtu_slave->api.read_hold_reg != NULL,
@@ -60,8 +60,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             }
             break;
         }
-        case 0x1: /*读线圈状�?*/
-        case 0x2: /*读输入状�?*/
+        case 0x1: /*璇荤嚎鍦堢姸锟�?*/
+        case 0x2: /*璇昏緭鍏ョ姸锟�?*/
         {
             // if (packet.func_code == 0x1) {
             //     resp_code = mb_rtu_ret(rtu_slave->api.read_coil_state != NULL,
@@ -75,7 +75,7 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             // if (resp_code == rsp_ok) {
             //     cache_buf[resp_len++] = packet.slave_addr;
             //     cache_buf[resp_len++] = packet.func_code;
-            //     // 返回的字节数
+            //     // 杩斿洖鐨勫瓧鑺傛暟
             //     if (packet.reg_num % 8 == 0) {
             //         cache_buf[resp_len++] = packet.reg_num / 8;
             //     } else {
@@ -85,8 +85,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             // }
         }
             break;
-        case 0x06:/*写一�?寄存�?*/
-        case 0x05:/*写一�?线圈*/
+        case 0x06:/*鍐欎竴锟�?瀵勫瓨锟�?*/
+        case 0x05:/*鍐欎竴锟�?绾垮湀*/
         {
             if (packet.func_code == 0x05) {
                 resp_code = mb_rtu_ret(rtu_slave->api.write_one_coil != NULL,
@@ -102,8 +102,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             }
             break;
         }
-        case 0x10:/*写�?�个寄存�?*/
-        case 0x0F:/*写�?�个线圈*/
+        case 0x10:/*鍐欙拷?锟戒釜瀵勫瓨锟�?*/
+        case 0x0F:/*鍐欙拷?锟戒釜绾垮湀*/
         {
             // if (packet.func_code == 0x0F) {
             //     un_pack_bool(cache_status_buf, packet.reg_num, packet.data, packet.data_len);
@@ -150,20 +150,20 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr) {
     ptr->reg_addr = cv_u8_to_16(data + idx);
     idx += 2;
     switch (ptr->func_code) {
-        case 0x3: /*读保持寄存器*/
-        case 0x4: /*读输入寄存器*/
-        case 0x1: /*读线圈状�?*/
-        case 0x2: /*读输入状�?*/
+        case 0x3: /*璇讳繚鎸佸瘎瀛樺櫒*/
+        case 0x4: /*璇昏緭鍏ュ瘎瀛樺櫒*/
+        case 0x1: /*璇荤嚎鍦堢姸锟�?*/
+        case 0x2: /*璇昏緭鍏ョ姸锟�?*/
             ptr->reg_num = cv_u8_to_16(data + idx);
             idx += 2;
             break;
-        case 0x06:/*写一�?寄存�?*/
-        case 0x05:/*写一�?线圈*/
+        case 0x06:/*鍐欎竴锟�?瀵勫瓨锟�?*/
+        case 0x05:/*鍐欎竴锟�?绾垮湀*/
             ptr->data = data + idx;
             ptr->data_len = 2;
             break;
-        case 0x10:/*写�?�个寄存�?*/
-        case 0x0F:/*写�?�个线圈*/
+        case 0x10:/*鍐欙拷?锟戒釜瀵勫瓨锟�?*/
+        case 0x0F:/*鍐欙拷?锟戒釜绾垮湀*/
             ptr->reg_num = cv_u8_to_16(data + idx);
             idx += 2;
             ptr->data_len = data[idx++];
@@ -173,7 +173,7 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr) {
 }
 
 
-/***************************************************************具体实现********************************************************/
+/***************************************************************鍏蜂綋瀹炵幇********************************************************/
 uint16_t reg_start_addr = 0x000;
 
 regHoldreg_u holdreg={

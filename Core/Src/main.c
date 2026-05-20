@@ -47,7 +47,9 @@
 
 // #include "delay.h"   // Legacy CS5530 software-SPI delay helper disabled during CS5552 migration.
 // #include "io_spi.h"  // Legacy CS5530 software-SPI GPIO driver disabled during CS5552 migration.
-// #include "cs553X.h"  // Legacy CS5530 header disabled during CS5552 migration.
+#include "cs553X.h"
+#include "user.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,7 +75,6 @@ uint8_t test_check = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MPU_Initialize(void);
 static void MPU_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
@@ -103,8 +104,7 @@ void hardwareInit(void){
   RS485_init(&huart2);
   // ADC init
 	// ADS1274_Init();
-  // Legacy CS5530 init path disabled during CS5552 migration.
-  // cs5530Init();
+  cs5530Init();
   //Eth fifo init
 	fifo_init(&rev_fifo);
   //Encoder init
@@ -167,21 +167,22 @@ void firmwareVersionShown(void){
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
-	uint8_t err=0;
-	uint8_t send_buf_MRAM[10]={7,1,0x0A,8,6,0,8,1,0x0F,9};
-	uint8_t recv_buf_MRAM[10];
-	uint8_t i=0;
-  uint32_t counterUs = 0;
+	// uint8_t err=0;
+	// uint8_t send_buf_MRAM[10]={7,1,0x0A,8,6,0,8,1,0x0F,9};
+	// uint8_t recv_buf_MRAM[10];
+	// uint8_t i=0;
+  // uint32_t counterUs = 0;
   /* USER CODE END 1 */
+
+  /* MPU Configuration--------------------------------------------------------*/
+  MPU_Config();
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* MPU Configuration--------------------------------------------------------*/
-  MPU_Config();
 
   /* USER CODE BEGIN Init */
 
@@ -212,6 +213,7 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM14_Init();
   MX_TIM13_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   hardwareInit();
   softwareInit();
@@ -219,13 +221,14 @@ int main(void)
   //firmwareVersionShown();
   /* USER CODE END 2 */
 
-  /* Call init function for freertos objects (in freertos.c) */
+  /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
   /* Start scheduler */
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -254,11 +257,6 @@ void SystemClock_Config(void)
 
   /** Configure the main internal regulator output voltage
   */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
-  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
-
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
@@ -365,13 +363,14 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 }
 /* USER CODE END 4 */
 
-/* MPU Configuration */
+ /* MPU Configuration */
 
 void MPU_Config(void)
 {
 
   /* Disables the MPU */
   HAL_MPU_Disable();
+
   /* Enables the MPU */
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 
@@ -407,12 +406,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     poseCodeCalculate_Int(&bigDeformationLower,encoder.count1);
     poseCodeCalculate_Int(&bigDeformationUpper,encoder.count2);
     poseSpeedFilter_Int(&filter_Int,&pose,&speedPose,10);
-    AL.utcTime +=0.0005; 
+    AL.utcTime +=0.0005f; 
   }else if(htim->Instance == TIM17){
     FreeRTOSRunTimeTicks++;
   }
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM7) {
+  if (htim->Instance == TIM7)
+  {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
@@ -434,8 +434,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

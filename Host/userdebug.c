@@ -23,7 +23,7 @@ void LEDlight_Off()
 }
 
 uint8_t view_flag=1;
-//波形显示数组
+//娉㈠舰鏄剧ず鏁扮粍
 float view[4];
 void computer_view()
 {
@@ -55,3 +55,4 @@ void forceTareTestPrint(void)
 {
   printf("%d,%d,%f,%f,%f\r\n",force.code,force.codeFiter,force.filter,force.filter,AL.tare.fValue[4]);
 }
+

@@ -55,102 +55,84 @@ void DB9Detect_ReadALL(void){
 /**
  * @brief the state machine is used to eliminate the dither of DI
  * @param[in]		PinState Pinstate of halDI
- * @param[in]		x DI_DETECT_STRUCT,Used to handle state machine processes£¬
+ * @param[in]		x DI_DETECT_STRUCT,Used to handle state machine processesï¼?
  * 					record press time and pinstate after eliminating dither
  * @param[in]		PinStatePress the state after DI being pressed
 */
 GPIO_PinState DIDetect(GPIO_PinState PinState,DI_DETECT_STRUCT* x,GPIO_PinState PinStatePress){
-	int32_t TimTmp;
-	switch (x->stateMachine)
-	{
-	case NO_PRESS:
-		x->value = !PinStatePress;
-		//time overflow process
-		if((xTaskGetTickCount() - x->timRecordNoPress) < 0)
-			x->unpressTime += (xTaskGetTickCount() - x->timRecordNoPress + 4294967295);
-		else
-			x->unpressTime += (xTaskGetTickCount() - x->timRecordNoPress);
-		if(x->unpressTime > 4000000000)
-			x->unpressTime = 4000000000;
-		x->timRecordNoPress = xTaskGetTickCount();
-		if(PinState == PinStatePress){
-			x->stateMachine = DELAY_PRESS;
-			x->timRecord = xTaskGetTickCount();
-		}
-		break;
-	case DELAY_PRESS:
-		x->value = !PinStatePress;
-		//time overflow process
-		if((xTaskGetTickCount() - x->timRecordNoPress) < 0)
-			x->unpressTime += (xTaskGetTickCount() - x->timRecordNoPress + 4294967295);
-		else
-			x->unpressTime += (xTaskGetTickCount() - x->timRecordNoPress);
-		if(x->unpressTime > 4000000000)
-			x->unpressTime = 4000000000;
-		x->timRecordNoPress = xTaskGetTickCount();
-		// >15ms
-		if((xTaskGetTickCount() - x->timRecord) < 0)
-			TimTmp = (xTaskGetTickCount() - x->timRecord + 4294967295);
-		else
-			TimTmp = (xTaskGetTickCount() - x->timRecord);
-		if( TimTmp > 15){
-			x->timRecord = 0;
-			if(PinState == PinStatePress){
-				x->stateMachine = YES_PRESS;
-				x->timRecordYesPress = xTaskGetTickCount();
-			//	log_d("YES_PRESS");
-			}
-			else
-				x->stateMachine = NO_PRESS;
-		}
-		break;
-	case YES_PRESS:
-		x->value = PinStatePress;
-		//time overflow process
-		if((xTaskGetTickCount() - x->timRecordYesPress) < 0)
-			x->pressTime += (xTaskGetTickCount() - x->timRecordYesPress + 4294967295);
-		else
-			x->pressTime += (xTaskGetTickCount() - x->timRecordYesPress);
-		if(x->pressTime > 4000000000)//4,000,000s ¡Ö 46days
-			x->pressTime = 4000000000;
-		x->timRecordYesPress = xTaskGetTickCount();
-		if(PinState == !PinStatePress){
-			x->timRecord = xTaskGetTickCount();
-			x->stateMachine = DELAY_UNPRESS;
-		}
-		break;
-	case DELAY_UNPRESS:
-		x->value = PinStatePress;
-		//time overflow process
-		if((xTaskGetTickCount() - x->timRecordYesPress) < 0)
-			x->pressTime += (xTaskGetTickCount() - x->timRecordYesPress + 4294967295);
-		else
-			x->pressTime += (xTaskGetTickCount() - x->timRecordYesPress);
-		if(x->pressTime > 4000000000)
-			x->pressTime = 4000000000;
-		x->timRecordYesPress = xTaskGetTickCount();
-		// >15ms
-		if((xTaskGetTickCount() - x->timRecord) < 0)
-			TimTmp = (xTaskGetTickCount() - x->timRecord + 4294967295);
-		else
-			TimTmp = (xTaskGetTickCount() - x->timRecord);
-		if(TimTmp > 15){
-			x->timRecord = 0;
-			if(PinState == !PinStatePress){
-				x->stateMachine = NO_PRESS;
-				x->pressTime = 0;
-				x->timRecordYesPress = 0;
-			//	log_d("UNPRESS");
-			}
-			else
-				x->stateMachine = YES_PRESS;
-		}
-		break;
-	default:
-		break;
-	}
-	return x->value;
+    uint32_t TimTmp;
+    TickType_t currentTick;
+    GPIO_PinState PinStateRelease;
+
+    currentTick = xTaskGetTickCount();
+    PinStateRelease = (PinStatePress == GPIO_PIN_SET) ? GPIO_PIN_RESET : GPIO_PIN_SET;
+    switch (x->stateMachine)
+    {
+    case NO_PRESS:
+        x->value = PinStateRelease;
+        x->unpressTime += (currentTick - x->timRecordNoPress);
+        if(x->unpressTime > 4000000000U)
+            x->unpressTime = 4000000000U;
+        x->timRecordNoPress = currentTick;
+        if(PinState == PinStatePress){
+            x->stateMachine = DELAY_PRESS;
+            x->timRecord = currentTick;
+        }
+        break;
+    case DELAY_PRESS:
+        x->value = PinStateRelease;
+        x->unpressTime += (currentTick - x->timRecordNoPress);
+        if(x->unpressTime > 4000000000U)
+            x->unpressTime = 4000000000U;
+        x->timRecordNoPress = currentTick;
+        TimTmp = currentTick - x->timRecord;
+        if(TimTmp > 15U){
+            x->timRecord = 0;
+            if(PinState == PinStatePress){
+                x->stateMachine = YES_PRESS;
+                x->timRecordYesPress = currentTick;
+            //    log_d("YES_PRESS");
+            }
+            else
+                x->stateMachine = NO_PRESS;
+        }
+        break;
+    case YES_PRESS:
+        x->value = PinStatePress;
+        x->pressTime += (currentTick - x->timRecordYesPress);
+        if(x->pressTime > 4000000000U)//4,000,000s â‰?46days
+            x->pressTime = 4000000000U;
+        x->timRecordYesPress = currentTick;
+        if(PinState == PinStateRelease){
+            x->timRecord = currentTick;
+            x->stateMachine = DELAY_UNPRESS;
+        }
+        break;
+    case DELAY_UNPRESS:
+        x->value = PinStatePress;
+        x->pressTime += (currentTick - x->timRecordYesPress);
+        if(x->pressTime > 4000000000U)
+            x->pressTime = 4000000000U;
+        x->timRecordYesPress = currentTick;
+        TimTmp = currentTick - x->timRecord;
+        if(TimTmp > 15U){
+            x->timRecord = 0;
+            if(PinState == PinStateRelease){
+                x->stateMachine = NO_PRESS;
+                x->pressTime = 0;
+                x->timRecordYesPress = 0;
+            //    log_d("UNPRESS");
+            }
+            else
+                x->stateMachine = YES_PRESS;
+        }
+        break;
+    default:
+        break;
+    }
+    return x->value;
  }
+
 
 
 
