@@ -15,7 +15,7 @@
 #include "sensor.h"
 #include <elog.h>
 
-#ifndef sign(x)
+#ifndef sign
 	#define sign(x) ((x)>0?1:((x)<0?-1:1))
 #endif
 

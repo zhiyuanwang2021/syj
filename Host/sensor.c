@@ -137,7 +137,6 @@ void senDateSync(sensorData_t in[5],APP_LAYER_VARIABLE_STRUCT* out){
 void sendata_update(void)
 {
 	uint8_t j=0;
-	float temp;
 	//fucntion code 0x1b not include sensorIntgr,so sensorIntgr must be updated manually before total memcpy
 	SenData[sensorConnector].sensorIntgr = senDataCommbuf[sensorConnector].sensorIntgr;
 	memcpy(&SenData[sensorConnector],&senDataCommbuf[sensorConnector],sizeof(senDataCommbuf[sensorConnector]));
@@ -175,10 +174,9 @@ void sendata_update(void)
 			if(SenData[ch2Ext1].LinPoint > 0){
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
-					temp = SenData[sensorConnector].LinV[j].CorrectionFactor;
 					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
 												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalValue;	
-					//printf("Num:%d Temp:%f,%f\r\n",j,temp,SenData[sensorConnector].LinV[j].CorrectionFactor);												
+					//printf("Num:%d Temp:%f\r\n",j,SenData[sensorConnector].LinV[j].CorrectionFactor);												
 				}
 				sensorCalibrate.multipointZeroCodeUpdate(ch2Ext1,&SenData[ch2Ext1],&sensorCalibrate.zeroCode[ch2Ext1]);
 			}else{
@@ -216,10 +214,9 @@ void sendata_update(void)
 			if(SenData[ch4Load].LinPoint > 0){
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
-					temp = SenData[sensorConnector].LinV[j].CorrectionFactor;	
 					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
 												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalValue * 1000.0f;	
-					//printf("Num:%d Temp:%f,%f\r\n",j,temp,SenData[sensorConnector].LinV[j].CorrectionFactor);						
+					//printf("Num:%d Temp:%f\r\n",j,SenData[sensorConnector].LinV[j].CorrectionFactor);						
 				}
 				sensorCalibrate.multipointZeroCodeUpdate(ch4Load,&SenData[ch4Load],&sensorCalibrate.zeroCode[ch4Load]);
 			}else{
@@ -266,11 +263,13 @@ void sendata_pg_update(void* set)
 #define DELAY_PRESS 1	//eliminate dither
 #define YES_PRESS 2			//CON has been connected or ADJ has been pressed
 #define DELAY_UNPRESS 3			//CON has been connected or ADJ has been pressed
+#if USE_DB9_CON
 static DB9Typedef lastRecord = {
 	.CON1.value = GPIO_PIN_RESET,
 	.CON2.value = GPIO_PIN_RESET,
 	.CON3.value = GPIO_PIN_RESET,
 };
+#endif
 /**
  * @brief monitor the state of CON and ADJ of sensor DB9 connector
  * @param[in] Db9 DB9Typedef*

@@ -69,14 +69,14 @@ void DOPEDYNCYCLE_Process(void);
 void RDOUTPUTPARA_Process(void);//读取输出参数
 void WROUTPUTPARA_Process(OUTPUTPARA *x);//写入输出参数
 void RDETHPARA_Process(void);//读以太网参数
-void WRETHPARA_Process(void);//下发以太网参数
-void RDSYSPARA_Process(void);//读系统参数
+void WRETHPARA_Process(void);//下发以太网参�?
+void RDSYSPARA_Process(void);//读系统参�?
 void WRSYSPARA_Process(void);//下发系统参数
 void DOPESETOPENLOOPCOMMAND_Process(void);//手动测试指令
 
 //传感器相关通信处理函数
-void RDSENSORDATA_Process(void);//读取传感器数据
-void WRSENSORDATA_Process(void);//写入传感器数据
+void RDSENSORDATA_Process(void);//读取传感器数�?
+void WRSENSORDATA_Process(void);//写入传感器数�?
 void RDSENSORBIGDEFORMATIONDATA_Process(void);//读取大变形传感器数据
 void WRSENSORBIGDEFORMATIONDATA_Process(void);//写入大变形传感器数据
 //void SENSORZEROSET_Process(void);
@@ -107,14 +107,14 @@ void ETH_Communicate_Process(void)
 	sendUtcSetOn();
 
 
-	//接收数据包处理
+	//接收数据包处�?
 	while(rev_fifo.state != FIFO_EMPTY)
 	{
 		rev_ring_fifo_pop(buf_data_save);//接收队列pop一条数据帧
 		while(mySemaphore.paraconfig.write == 1 || mySemaphore.paraconfig.set == 1){
 			osDelay(1);
 		}	
-			if(buf_data_save[0] == 0xAA && buf_data_save[1] == 0xAA) //再次确认帧头 并 防止队列空和错误帧情况
+			if(buf_data_save[0] == 0xAA && buf_data_save[1] == 0xAA) //再次确认帧头 �?防止队列空和错误帧情�?
 			{ 
 				//in assembly move instruction
 				//case 1:CMD_DWND,record all movement command (Max load value is 10) 
@@ -122,30 +122,30 @@ void ETH_Communicate_Process(void)
 					&& buf_data_save[2] >= DOPEPOS && buf_data_save[2] <= DOPEBLOCKEXECUTE){
 						combinedMoveDWND_Process();
 				}else{
-					switch(buf_data_save[2])//功能码
+					switch(buf_data_save[2])//功能�?
 					{
-						case LINK_ACK://对0xA0功能码应答，用于判断网络状态*
+						case LINK_ACK://�?xA0功能码应答，用于判断网络状�?
 								LINK_ACK_Process();
 							break;
 						case DOPE_OPEN_CLOSE_LINK://建立或断开连接 数据长度 00 01  数据内容 01   //01 On   00 Off 
 								DOPE_OPEN_CLOSE_LINK_Process();
 							break;
-						case DOPEON_OFF://激活/停用控制器 数据长度 00 01  数据内容 01   //01 On   00 Off 
+						case DOPEON_OFF://激�?停用控制�?数据长度 00 01  数据内容 01   //01 On   00 Off 
 								DOPEON_OFF_Process();
 							break;
-						case DOPESETCTRL://使能/不使能闭环控制 数据长度 00 01  数据内容 01   //01 On   00 Off 
+						case DOPESETCTRL://使能/不使能闭环控�?数据长度 00 01  数据内容 01   //01 On   00 Off 
 								DOPESETCTRL_Process();
 							break; 
-						case DOPETRANSMITDATA://激活/停用测量数据传输
+						case DOPETRANSMITDATA://激�?停用测量数据传输
 								DOPETRANSMITDATA_Process();
 							break;
-						case DOPERDNOMINALACCSPEED://0x07 读取位置生成器标称值******
+						case DOPERDNOMINALACCSPEED://0x07 读取位置生成器标称�?*****
 								DOPERDNOMINALACCSPEED_Process();
 						break;
-						case DOPESETNOMINALACCSPEED://0x08 读取位置生成器标称值******
+						case DOPESETNOMINALACCSPEED://0x08 读取位置生成器标称�?*****
 								DOPESETNOMINALACCSPEED_Process();
 						break;
-						case DOPERDCTRLPARAMETER://读取所有闭环控制参数***
+						case DOPERDCTRLPARAMETER://读取所有闭环控制参�?**
 								DOPERDCTRLPARAMETER_Process();
 							break;
 						case DOPEDEADBANDCTRL://设定误差死区控制参数*
@@ -157,16 +157,16 @@ void ETH_Communicate_Process(void)
 						case DOPESPEEDLIMIT://设定最大限定速度*
 								DOPESPEEDLIMIT_Process();
 							break;
-						case DOPESETDATATRANSMISSIONRATE://设定数据发送周期
+						case DOPESETDATATRANSMISSIONRATE://设定数据发送周�?
 								DOPESETDATATRANSMISSIONRATE_Process();
 							break;
-						case DOPEINTGR://设定传感器滤波时间*
+						case DOPEINTGR://设定传感器滤波时�?
 								DOPEINTGR_Process();
 							break;
 						case DOPEDESTWND://设定目标误差/时间窗口*
 								DOPEDESTWND_Process();
 							break;
-						case DOPESFT://设定软限位*
+						case DOPESFT://设定软限�?
 								DOPESFT_Process();
 							break;
 						case DOPEPOSPID://0x11  设置位置闭环控制参数****** 
@@ -208,29 +208,29 @@ void ETH_Communicate_Process(void)
 						case RDETHPARA://读以太网参数*
 								RDETHPARA_Process();
 							break;
-						case WRETHPARA://下发以太网参数	下位机收到后重启*
+						case WRETHPARA://下发以太网参�?下位机收到后重启*
 								WRETHPARA_Process();
 							break;				
-						case RDSYSPARA://读系统参数
+						case RDSYSPARA://读系统参�?
 								RDSYSPARA_Process();
 							break;
 						case WRSYSPARA://下发系统参数
 								WRSYSPARA_Process();
 							break;				
-						case DOPEWRDVERSION://读版本信息
+						case DOPEWRDVERSION://读版本信�?
 							/* Fun_18335 */
 							/* Fun_18415 */
 							break;
-						case SETTARE://测量通道数值清零
+						case SETTARE://测量通道数值清�?
 							SETTARE_Process();
 							break;
 						case WRSERVOPARA://写入伺服参数
 							WRSERVOPARA_Process();
 							break;
-						case RDSERVOPARA://读伺服参数
+						case RDSERVOPARA://读伺服参�?
 							RDSERVOPARA_Process();
 							break;
-						case DOPESETOPENLOOPCOMMAND://开环测试指令
+						case DOPESETOPENLOOPCOMMAND://开环测试指�?
 							DOPESETOPENLOOPCOMMAND_Process();
 							break;				
 						case DOPEMOVE://以默认加速度上下移动
@@ -239,14 +239,14 @@ void ETH_Communicate_Process(void)
 						case DOPEMOVE_A://以指定加速度上下移动
 							DOPEMOVE_A_Process();
 							break;				
-						case DOPEPOS://以默认加速度移动至指定位置 0x23
+						case DOPEPOS://以默认加速度移动至指定位�?0x23
 							DOPEPOS_Process();
 							break;
-						case DOPEPOS_A://以指定加/减速度移动至指定位置 0x24
+						case DOPEPOS_A://以指定加/减速度移动至指定位�?0x24
 							DOPEPOS_A_Process();
 							break;
 						case DOPEPOSEXT:
-						/*在指定的控制模式下，以默认加速度移动至指定位置，若达到限位位置，则以默认减速度停止；
+						/*在指定的控制模式下，以默认加速度移动至指定位置，若达到限位位置，则以默认减速度停止�?
 						若即将达到指定位置，则根据参数“DestinationMode”确定到达指定位置的控制方式以及到达指定位置后的操作*/
 							DOPEPOSEXT_Process();
 						break;
@@ -261,11 +261,11 @@ void ETH_Communicate_Process(void)
 						case DOPEHALT_A://以指定减速度从现Command速度减速至0
 							DOPEHALT_A_Process();
 						break;
-						case DOPESHALT://以标称减速度从当前位置减速至0，没有MoveCtrl选择，只有位置模式
+						case DOPESHALT://以标称减速度从当前位置减速至0，没有MoveCtrl选择，只有位置模�?
 							DOPESHALT_Process();
 						break;
 						case DOPETRIG:
-						/*以指定速度移动到限制位置,
+						/*以指定速度移动到限制位�?
 						如果到达触发条件位置，将发送一条消息（如果在组合移动序列中使用，则激活下一个命令）*/
 							DOPETRIG_Process();
 						break;
@@ -273,29 +273,29 @@ void ETH_Communicate_Process(void)
 						/*同DoPETrig，但在加减速过程中，需要指定加速度，限位减速度*/
 							DOPETRIG_A_Process();
 						break;
-						case DOPEBLOCKHEADER://所有简单命令组合移动的指令序列头
+						case DOPEBLOCKHEADER://所有简单命令组合移动的指令序列�?
 							DOPEBLOCKHEADER_Process();
 						break;
-						case DOPEBLOCKEXECUTE://所有简单命令组合移动的执行命令(开始/结束)
+						case DOPEBLOCKEXECUTE://所有简单命令组合移动的执行命令(开�?结束)
 							DOPEBLOCKEXECUTE_Process();
 						break;
-						case DOPECYCLE://用斜坡函数执行周期运动
+						case DOPECYCLE://用斜坡函数执行周期运�?
 							DOPECYCLE_Process();
 						break;
-						case DOPEDYNCYCLE://动态循环指令***
+						case DOPEDYNCYCLE://动态循环指�?**
 							DOPEDYNCYCLE_Process();
 						break;
-						//传感器相关
-						case RDSENSORDATA://读取传感器数据
+						//传感器相�?
+						case RDSENSORDATA://读取传感器数�?
 							RDSENSORDATA_Process();
 						break;
-						case WRSENSORDATA://写入传感器数据
+						case WRSENSORDATA://写入传感器数�?
 							WRSENSORDATA_Process();
 						break;
-						case RDSENSORBIGDEFORMATIONDATA://读取传感器数据
+						case RDSENSORBIGDEFORMATIONDATA://读取传感器数�?
 							RDSENSORBIGDEFORMATIONDATA_Process();
 						break;
-						case WRSENSORBIGDEFORMATIONDATA://写入传感器数据
+						case WRSENSORBIGDEFORMATIONDATA://写入传感器数�?
 							WRSENSORBIGDEFORMATIONDATA_Process();
 						break;
 						default:
@@ -315,16 +315,16 @@ void ETH_Communicate_Process(void)
  */
 void combinedMoveDWND_Process(void){
 	if(combinedMove.counter < COMBINED_MOVE_MAX_LEN){
-		switch(buf_data_save[2])//功能码
+		switch(buf_data_save[2])//功能�?
 		{
-			case DOPEPOS://以默认加速度移动至指定位置 0x23
+			case DOPEPOS://以默认加速度移动至指定位�?0x23
 				DOPEPOS_Process();
 				break;
-			case DOPEPOS_A://以指定加/减速度移动至指定位置 0x24
+			case DOPEPOS_A://以指定加/减速度移动至指定位�?0x24
 				DOPEPOS_A_Process();
 				break;
 			case DOPEPOSEXT:
-			/*在指定的控制模式下，以默认加速度移动至指定位置，若达到限位位置，则以默认减速度停止；
+			/*在指定的控制模式下，以默认加速度移动至指定位置，若达到限位位置，则以默认减速度停止�?
 			若即将达到指定位置，则根据参数“DestinationMode”确定到达指定位置的控制方式以及到达指定位置后的操作*/
 				DOPEPOSEXT_Process();
 			break;
@@ -338,11 +338,11 @@ void combinedMoveDWND_Process(void){
 			case DOPEHALT_A://以指定减速度从现Command速度减速至0
 				DOPEHALT_A_Process();
 			break;
-			case DOPESHALT://以标称减速度从当前位置减速至0，没有MoveCtrl选择，只有位置模式
+			case DOPESHALT://以标称减速度从当前位置减速至0，没有MoveCtrl选择，只有位置模�?
 				DOPESHALT_Process();
 			break;
 			case DOPETRIG:
-			/*以指定速度移动到限制位置,
+			/*以指定速度移动到限制位�?
 			如果到达触发条件位置，将发送一条消息（如果在组合移动序列中使用，则激活下一个命令）*/
 				DOPETRIG_Process();
 			break;
@@ -350,10 +350,10 @@ void combinedMoveDWND_Process(void){
 			/*同DoPETrig，但在加减速过程中，需要指定加速度，限位减速度*/
 				DOPETRIG_A_Process();
 			break;
-			case DOPEBLOCKHEADER://所有简单命令组合移动的指令序列头
+			case DOPEBLOCKHEADER://所有简单命令组合移动的指令序列�?
 				DOPEBLOCKHEADER_Process();
 			break;
-			case DOPEBLOCKEXECUTE://所有简单命令组合移动的执行命令(开始/结束)
+			case DOPEBLOCKEXECUTE://所有简单命令组合移动的执行命令(开�?结束)
 				DOPEBLOCKEXECUTE_Process();
 			break;
 			default:
@@ -362,12 +362,12 @@ void combinedMoveDWND_Process(void){
 		}
 	}else{
 		combinedMove.counter = COMBINED_MOVE_MAX_LEN;
-		switch(buf_data_save[2])//功能码
+		switch(buf_data_save[2])//功能�?
 		{
-			case DOPEBLOCKHEADER://所有简单命令组合移动的指令序列头
+			case DOPEBLOCKHEADER://所有简单命令组合移动的指令序列�?
 				DOPEBLOCKHEADER_Process();
 			break;
-			case DOPEBLOCKEXECUTE://所有简单命令组合移动的执行命令(开始/结束)
+			case DOPEBLOCKEXECUTE://所有简单命令组合移动的执行命令(开�?结束)
 				DOPEBLOCKEXECUTE_Process();
 			break;
 			default:
@@ -380,7 +380,7 @@ void combinedMoveDWND_Process(void){
 
 void LINK_ACK_Process(void)
 {
-	stateFlag.PC_ack_state = 1;//有ack信号，网络连接正常
+	stateFlag.PC_ack_state = 1;//有ack信号，网络连接正�?
 	//log_i("stateFlag.PC_ack_state:%d",stateFlag.PC_ack_state);
 }
 
@@ -393,9 +393,9 @@ void DOPE_OPEN_CLOSE_LINK_Process(void)
 	else
 	{commBuf.OpenDevice_state = Device_Off;	buf_com[0]=Device_Off;}
 	
-	//要加入任务通知检测 是否出于紧急状态 如果出于紧急状态 需要等待系统完成紧急处理后再回消息 11.11
+	//要加入任务通知检�?是否出于紧急状�?如果出于紧急状�?需要等待系统完成紧急处理后再回消息 11.11
 	/* Fun_1841 */
-	send_ring_fifo_push(1,buf_com,DOPEOPENDEVICEID);//下位机会返回0x80功能码
+	send_ring_fifo_push(1,buf_com,DOPEOPENDEVICEID);//下位机会返回0x80功能�?
 	memset(buf_com,0,sizeof(buf_com));
 }
 
@@ -409,7 +409,7 @@ void DOPEON_OFF_Process(void)
 	{commBuf.DoPE_state = DoPE_Off;	buf_com[0]=DoPE_Off;}
 	AL.command = DOPEON_OFF;
 	/* Fun_1842 */
-	send_ring_fifo_push(1,buf_com,UTCON_OFF);//下位机会返回0x81功能码
+	send_ring_fifo_push(1,buf_com,UTCON_OFF);//下位机会返回0x81功能�?
 	memset(buf_com,0,sizeof(buf_com));
 }
 
@@ -424,7 +424,7 @@ void DOPESETCTRL_Process(void)
 	commBuf.lpusTAN = (buf_data_save[6]<<8) +(buf_data_save[7]);//lpusTAN 指令编号
 	AL.command = DOPESETCTRL;
 	/* Fun_1843 */
-	send_ring_fifo_push(1,buf_com,UTCSETCTRL);//下位机会返回0x83功能码
+	send_ring_fifo_push(1,buf_com,UTCSETCTRL);//下位机会返回0x83功能�?
 	memset(buf_com,0,sizeof(buf_com));
 }
 
@@ -440,7 +440,7 @@ void DOPETRANSMITDATA_Process(void)
 }
 /*
 DOPERDCTRLPARAMETER_Process 
-读取闭环控制参数指令,对应下位机返回指令0x87
+读取闭环控制参数指令,对应下位机返回指�?x87
 */
 void DOPERDCTRLPARAMETER_Process_LoadingData(uint8_t movectrl)
 {
@@ -569,7 +569,7 @@ void DOPERDCTRLPARAMETER_Process_Conversion(ALLCTRLPARA x,uint16_t* i)
 }
 
 /* Fun_1837 */
-void DOPERDCTRLPARAMETER_Process(void)//读取闭环控制参数指令,对应下位机返回指令
+void DOPERDCTRLPARAMETER_Process(void)//读取闭环控制参数指令,对应下位机返回指�?
 {
 	uint8_t movectrl=0;
 	uint16_t i=0;
@@ -577,7 +577,7 @@ void DOPERDCTRLPARAMETER_Process(void)//读取闭环控制参数指令,对应下
 	/* Fun_1845 */
 	memset(buf_com,0,sizeof(buf_com));//buf清空
 	Variable_Type_Conversion(UINT8_TYPE,*(uint32_t*)(&movectrl),buf_com,&i);
-	//DOPERDCTRLPARAMETER_Process_LoadingData(movectrl);//更新所有要上发的控制参数
+	//DOPERDCTRLPARAMETER_Process_LoadingData(movectrl);//更新所有要上发的控制参�?
 	switch(movectrl)
 	{
 		case POS_MODE:
@@ -591,7 +591,7 @@ void DOPERDCTRLPARAMETER_Process(void)//读取闭环控制参数指令,对应下
 		break;
 		default:break;
 	}
-	send_ring_fifo_push(i,buf_com,0x84);//下位机会返回0x84功能码
+	send_ring_fifo_push(i,buf_com,0x84);//下位机会返回0x84功能�?
 }
 
 /**
@@ -697,7 +697,7 @@ void DOPESPEEDLIMIT_Process(void)//设置默认最大限定速度
 }
 
 /* Fun_18311 */
-void DOPESETDATATRANSMISSIONRATE_Process(void)//设定数据发送周期
+void DOPESETDATATRANSMISSIONRATE_Process(void)//设定数据发送周�?
 {
 	commBuf.SysPara.TransmitDataPeriod = (buf_data_save[5]<<24) + (buf_data_save[6]<<16) +(buf_data_save[7]<<8) +(buf_data_save[8]);
 	//leave it there for now ,and then change it to loopctrl
@@ -707,11 +707,11 @@ void DOPESETDATATRANSMISSIONRATE_Process(void)//设定数据发送周期
 }
 
 /* Fun_18312 */
-void DOPEINTGR_Process(void)//设定传感器滤波时间
+void DOPEINTGR_Process(void)//设定传感器滤波时�?
 {
 	commBuf.Command = DOPEINTGR;
-	sensorConnector = buf_data_save[5]; //传感器编号
-	senDataCommbuf[sensorConnector].sensorIntgr = (buf_data_save[6]<<24) + (buf_data_save[7]<<16) +(buf_data_save[8]<<8) +(buf_data_save[9]);//积分时间
+	sensorConnector = (sensorConnector_e)buf_data_save[5]; //���������
+	senDataCommbuf[sensorConnector].sensorIntgr = (buf_data_save[6]<<24) + (buf_data_save[7]<<16) +(buf_data_save[8]<<8) +(buf_data_save[9]);//����ʱ��
 	senDataCommbuf[sensorConnector].sensorIntgr /=1000;
 	commBuf.lpusTAN = (buf_data_save[10]<<8) +(buf_data_save[11]);//lpusTAN 指令编号
 	mySemaphore.paraconfig.write = 1;
@@ -747,7 +747,7 @@ void DOPEDESTWND_Process(void)//设定目标误差/时间窗口
 }
 
 /* Fun_18314 */
-void DOPESFT_Process(void)//设定软限位
+void DOPESFT_Process(void)//设定软限�?
 {
 	uint8_t reaction=0;
 	uint32_t temp1=0,temp2=0;
@@ -833,7 +833,7 @@ void DOPERDPOSPID_Process(void)//读取位置闭环控制参数
 		default:break;
 	}
 	log_i("DOPERDPOSPID MODE:%d,P:%f I:%f D:%f\r\n",movectrl,extAllCtrlPara.PosPid.P,extAllCtrlPara.PosPid.I,extAllCtrlPara.PosPid.D);
-	send_ring_fifo_push(i,buf_com,0x85);//下位机会返回0x85功能码
+	send_ring_fifo_push(i,buf_com,0x85);//下位机会返回0x85功能�?
 }
 
 /* Fun_18317 */
@@ -957,7 +957,7 @@ void DOPERDFEEDFORWARD_Process(void)//读取速度前馈参数
 		break;
 		default:break;
 	}
-	send_ring_fifo_push(i,buf_com,0x87);//下位机会返回0x89功能码
+	send_ring_fifo_push(i,buf_com,0x87);//下位机会返回0x89功能�?
 }
 
 /* Fun_18323 */
@@ -1028,7 +1028,7 @@ void DOPESETSENSORCORRECTION_Process(void)//设定传感器校正表指令
 	commBuf.sensorset.Correct.CalculatedSensor = buf_data_save[i++]; 
 	commBuf.sensorset.Correct.SENSOR_CORR_MAX = buf_data_save[i++]; 
 	commBuf.sensorset.Correct.CorrNo = buf_data_save[i++]; 
-	for(j=0;j<commBuf.sensorset.Correct.CorrNo;j++)//存S1的校正值
+	for(j=0;j<commBuf.sensorset.Correct.CorrNo;j++)//存S1的校正�?
 	{
 		temp += (buf_data_save[i++]<<24);
 		temp += (buf_data_save[i++]<<16);
@@ -1037,7 +1037,7 @@ void DOPESETSENSORCORRECTION_Process(void)//设定传感器校正表指令
 		commBuf.sensorset.Correct.S1Correction[j] = *((float*)(&temp));
 		temp=0;
 	}
-	for(j=0;j<commBuf.sensorset.Correct.CorrNo;j++)//存S2的ADC码值
+	for(j=0;j<commBuf.sensorset.Correct.CorrNo;j++)//存S2的ADC码�?
 	{
 		temp += (buf_data_save[i++]<<24);
 		temp += (buf_data_save[i++]<<16);
@@ -1050,7 +1050,7 @@ void DOPESETSENSORCORRECTION_Process(void)//设定传感器校正表指令
 	printf("CalculatedSensor=%d\r\n",commBuf.sensorset.Correct.CalculatedSensor);
 	printf("SENSOR_CORR_MAX=%d\r\n",commBuf.sensorset.Correct.SENSOR_CORR_MAX);
 	printf("CorrNo=%d\r\n",commBuf.sensorset.Correct.CorrNo);
-	for(j=0;j<commBuf.sensorset.Correct.CorrNo;j++)//存S1的校正值
+	for(j=0;j<commBuf.sensorset.Correct.CorrNo;j++)//存S1的校正�?
 		printf("S1Correction[%d] = %.6f \tS1Correction[%d] = %d\r\n",
 				j,commBuf.sensorset.Correct.S1Correction[j],
 				j,commBuf.sensorset.Correct.S2Value[j]);
@@ -1069,9 +1069,9 @@ void DOPESETOPENLOOPCOMMAND_Process(void)//手动测试指令
 	commBuf.openloopAO = *((float*)(&temp));temp=0;
 	commBuf.DO = buf_data_save[i++]; 
 	
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 	
 
 	printf("Command=0x%2x  DOPESETOPENLOOPCOMMAND\r\n",commBuf.Command);
@@ -1094,9 +1094,9 @@ void DOPEMOVE_Process(void)//上下移动指令 默认加速度
 	commBuf.Speed = *((float*)(&temp));
 	commBuf.lpusTAN = (buf_data_save[11]<<8) +(buf_data_save[12]);//lpusTAN 指令编号
 	
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 	
 	switch (commBuf.MoveCtrl)
 	{
@@ -1134,9 +1134,9 @@ void DOPEMOVE_A_Process(void)
 	commBuf.Speed = *((float*)(&temp));
 	commBuf.lpusTAN = (buf_data_save[15]<<8) +(buf_data_save[16]);//lpusTAN 指令编号
 	
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 
 	commBuf.Dec = -commBuf.Acc;
 
@@ -1168,9 +1168,9 @@ void DOPEPOS_Process(void)//数据长度 00 0B  数据内容 01   //01 On   00 O
 	commBuf.Destination =  *((float*)(&temp));
 	commBuf.lpusTAN = (buf_data_save[14]<<8) +(buf_data_save[15]);//lpusTAN 指令编号
 	
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 	
 	switch (commBuf.MoveCtrl)
 	{
@@ -1231,9 +1231,9 @@ void DOPEPOS_A_Process(void)//数据长度 00 10  数据内容
 	commBuf.Destination =  *((float*)(&temp));
 	commBuf.lpusTAN = (buf_data_save[22]<<8) +(buf_data_save[23]);//lpusTAN 指令编号
 	
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 	
 	switch (commBuf.MoveCtrl)
 	{
@@ -1275,9 +1275,9 @@ void DOPEHALT_Process(void)////数据长度 00 03  数据内容
 	commBuf.MoveCtrl = buf_data_save[5]; 
 	commBuf.lpusTAN = (buf_data_save[6]<<8) +(buf_data_save[7]);//lpusTAN 指令编号
 	
-	// if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-	// 	if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-	// 				return; //如果指令重复则返回 不做操作
+	// if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+	// 	if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+	// 				return; //如果指令重复则返�?不做操作
 	
 	switch(commBuf.MoveCtrl)
 	{
@@ -1322,9 +1322,9 @@ void DOPEHALT_A_Process(void)////数据长度 00 03  数据内容
 	commBuf.lpusTAN = temp;temp=0;//lpusTAN 指令编号
 	commBuf.Dec = -commBuf.Acc;
 
-	// if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-	// 	if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-	// 				return; //如果指令重复则返回 不做操作
+	// if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+	// 	if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+	// 				return; //如果指令重复则返�?不做操作
 	log_i("DOPEHALT_A movectrl=%d Acc=%f Dec=%f",commBuf.MoveCtrl,commBuf.Acc,commBuf.Dec );
 	if(combinedMove.blockHeader.Cycles >= 1 && (combinedMove.blockHeader.ModeFlags & BHM_CMD_DWND) == BHM_CMD_DWND){
 		combinedMove.command[combinedMove.counter] = commBuf.Command;
@@ -1349,9 +1349,9 @@ void DOPESHALT_Process(void){
 	commBuf.lpusTAN = temp;temp=0;//lpusTAN 指令编号
 	commBuf.Acc = posAllCtrlPara.Nominal.Acc;
 	commBuf.Dec = -commBuf.Acc;
-	// if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-	// 	if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-	// 				return; //如果指令重复则返回 不做操作
+	// if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+	// 	if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+	// 				return; //如果指令重复则返�?不做操作
 	
 	log_i("DOPESHALT movectrl=%d Acc=%f Dec=%f",commBuf.MoveCtrl,commBuf.Acc,commBuf.Dec );
 	if(combinedMove.blockHeader.Cycles >= 1 && (combinedMove.blockHeader.ModeFlags & BHM_CMD_DWND) == BHM_CMD_DWND){
@@ -1487,7 +1487,6 @@ void DOPETRIG_A_Process(void){
 /* Fun_18353 */
 void DOPEBLOCKHEADER_Process(void){
 	uint16_t i = 5;
-	uint32_t temp = 0;
 	commBuf.Command = DOPEBLOCKHEADER;//用于在loopcontrol中作模式切换
 	//运动模式发生改变
 	commBuf.blockHeader.Cycles = buf_data_save[i++]; 
@@ -1536,9 +1535,9 @@ void DOPEPOSEXT_Process(void){
 	temp += (buf_data_save[i++]<<8);temp += (buf_data_save[i++]);
 	commBuf.lpusTAN = temp;temp=0;//lpusTAN 指令编号
 
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 	switch(commBuf.MoveCtrl)
 	{
 		case POS_MODE:
@@ -1634,21 +1633,21 @@ void DOPEPOSEXT_A_Process(void){
 	temp += (buf_data_save[i++]<<8);temp += (buf_data_save[i++]);
 	commBuf.lpusTAN = temp;temp=0;//lpusTAN 指令编号
 
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 	
 	commBuf.Dec = commBuf.DecLimit;
 
 		printf("Command=0x%2x\r\n",commBuf.Command);
 		printf("MoveCtrl=0x%2x\r\n",commBuf.MoveCtrl);
-		printf("Acc=0x%2x\r\n",commBuf.Acc);
+		printf("Acc=%f\r\n",commBuf.Acc);
 		printf("Speed=%f\r\n",commBuf.Speed);
 		printf("DecLimit=%f\r\n",commBuf.DecLimit);
 		printf("LimitMode=%d\r\n",commBuf.LimitMode);
 		printf("Limit=%f\r\n",commBuf.Limit);
 		printf("DestinationCtrl=%d\r\n",commBuf.DestinationCtrl);
-		printf("DecDestination=%d\r\n",commBuf.DecDestination);
+		printf("DecDestination=%f\r\n",commBuf.DecDestination);
 		printf("Destination=%f\r\n",commBuf.Destination);
 		printf("DestinationMode=%d\r\n",commBuf.DestinationMode);
 		printf("lpuTAN=%d\r\n",commBuf.lpusTAN);
@@ -1697,9 +1696,9 @@ void DOPECYCLE_Process(void) //0x40
 	commBuf.Destination =  *((float*)(&temp));
 	commBuf.lpusTAN = (buf_data_save[39]<<8) +(buf_data_save[40]);//lpusTAN 指令编号
 
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 
 	switch(commBuf.MoveCtrl)
 	{
@@ -1790,14 +1789,14 @@ void DOPEDYNCYCLE_Process(void)
 	commBuf.pgdyn.speedtodestination = *((float*)(&temp));temp=0;
 	temp += (buf_data_save[i++]<<24);temp += (buf_data_save[i++]<<16);temp += (buf_data_save[i++]<<8);temp += (buf_data_save[i++]);
 	commBuf.pgdyn.destination = *((float*)(&temp));temp=0;
-	//扫频待添加
+	//扫频待添�?
 	
 	
 	commBuf.MoveCtrl = commBuf.pgdyn.movectrl; 
 
-	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-					return; //如果指令重复则返回 不做操作
+	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+					return; //如果指令重复则返�?不做操作
 	
 	
 	
@@ -1843,7 +1842,7 @@ void RDOUTPUTPARA_Process(void)//读取输出参数
 	printf("OutputPara.MaxVoltage:%f\r\n",OutputPara.MaxVoltage);
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&OutputPara.MaxCurrent),buf_com,&i);//DataTransmitPeriod
 
-	send_ring_fifo_push(i,buf_com,0x8A);//下位机会返回0x8A功能码
+	send_ring_fifo_push(i,buf_com,0x8A);//下位机会返回0x8A功能�?
 }
 
 /* Fun_18330 */
@@ -1887,20 +1886,20 @@ void WROUTPUTPARA_Process(OUTPUTPARA *x)//写入输出参数
 /* Fun_18331 */
 void RDETHPARA_Process(void)//读以太网参数
 {
-	//返回0x8A指令 上发以太网参数
+	//返回0x8A指令 上发以太网参�?
 	uint16_t i=0,j=0;
 	/* Fun_18413 */
 	memset(buf_com,0,sizeof(buf_com));//buf清空
-	buf_com[i++] = utc_eth.Mode;//以太网协议
+	buf_com[i++] = utc_eth.Mode;//以太网协�?
 	for(j=0;j<4;j++) buf_com[i++]=dest_ip[j];//服务器IP地址
 	Variable_Type_Conversion(UINT16_TYPE,*(uint32_t*)(&dest_port),buf_com,&i);//服务器端口号
 	for(j=0;j<4;j++) buf_com[i++]=gWIZNETINFO.ip[j];//本地IP地址
 	for(j=0;j<6;j++) buf_com[i++]=gWIZNETINFO.mac[j];//本地MAC地址
-	send_ring_fifo_push(i,buf_com,0x8A);//下位机会返回0x8A功能码
+	send_ring_fifo_push(i,buf_com,0x8A);//下位机会返回0x8A功能�?
 }
 
 /* Fun_18332 */
-void WRETHPARA_Process(void)//下发以太网参数*
+void WRETHPARA_Process(void)//下发以太网参�?
 {
 	uint8_t i=0;
 	commBuf.Command = WRETHPARA;
@@ -1917,8 +1916,8 @@ void WRETHPARA_Process(void)//下发以太网参数*
 	log_i("LocalIp:%d,%d,%d,%d\r\n",ethConfig.LocalIp[0],ethConfig.LocalIp[1],ethConfig.LocalIp[2],ethConfig.LocalIp[3]);
 	log_i("LocalMac:0x%2x,0x%2x,0x%2x,0x%2x,0x%2x,0x%2x\r\n",ethConfig.LocalMac[0],ethConfig.LocalMac[1],ethConfig.LocalMac[2],ethConfig.LocalMac[3],ethConfig.LocalMac[4],ethConfig.LocalMac[5]);
 	
-	/*待加入
-	  存入控制器MRAM  重启系统 重新配置以太网参数	
+	/*待加�?
+	  存入控制器MRAM  重启系统 重新配置以太网参�?
 	*/	
 	mySemaphore.paraconfig.write = 1;
 }
@@ -1933,7 +1932,7 @@ void RDSYSPARA_Process(void)//读取系统参数
 	memset(buf_com,0,sizeof(buf_com));//buf清空
 	Variable_Type_Conversion(UINT16_TYPE,*(uint32_t*)(&SysPara.TransmitDataPeriod),buf_com,&i);//DataTransmitPeriod
 	Variable_Type_Conversion(UINT8_TYPE,*(uint32_t*)(&SysPara.ControllerStructure),buf_com,&i);//DataTransmitPeriod
-	send_ring_fifo_push(i,buf_com,UTCRDSYSPARA);//下位机会返回0x8C功能码
+	send_ring_fifo_push(i,buf_com,UTCRDSYSPARA);//下位机会返回0x8C功能�?
 }
 
 /* Fun_18334 */
@@ -1957,7 +1956,7 @@ void WRSYSPARA_Process(void)//写入系统参数
 	memset(buf_com,0,sizeof(buf_com));//buf清空
 	Variable_Type_Conversion(UINT16_TYPE,*(uint32_t*)(&commBuf.SysPara.TransmitDataPeriod),buf_com,&i);//DataTransmitPeriod
 	Variable_Type_Conversion(UINT8_TYPE,*(uint32_t*)(&commBuf.SysPara.ControllerStructure),buf_com,&i);//DataTransmitPeriod
-	send_ring_fifo_push(i,buf_com,0x8C);//下位机会返回0x8C功能码
+	send_ring_fifo_push(i,buf_com,0x8C);//下位机会返回0x8C功能�?
 
 	printf("Command=0x%2x RDSYSPARA\t\r\n",commBuf.Command);
 	printf("DataTransmitPeriod=%dms\t\r\n",commBuf.SysPara.TransmitDataPeriod);
@@ -1970,7 +1969,7 @@ void SETTARE_Process(void)
 	uint16_t i=5;
 	commBuf.Command = SETTARE;//用于在loopcontrol中作模式切换
 	commBuf.Connector = buf_data_save[i++];
-	//对应操作，或者置标志位或互斥信号量
+	//对应操作，或者置标志位或互斥信号�?
 	AL.tare.flag = 1;
 	AL.tare.connector = commBuf.Connector;
 	mySemaphore.paraconfig.write = 1;
@@ -2006,14 +2005,14 @@ void RDSERVOPARA_Process(void){
 	Variable_Type_Conversion(UINT32_TYPE,servoParam.electronicGear,buf_com,&i);//electronicGear
 	Variable_Type_Conversion(UINT32_TYPE,servoParam.encoderResolution,buf_com,&i);//encoderResolution
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&servoParam.analogGain),buf_com,&i);//DataTransmitPeriod
-	send_ring_fifo_push(i,buf_com,UTCRDSERVOPARA);//下位机会返回UTCRDSERVOPARA功能码
+	send_ring_fifo_push(i,buf_com,UTCRDSERVOPARA);//下位机会返回UTCRDSERVOPARA功能�?
 }
 
 /* Fun_133 */
 void CurrentData_Fifo_Push(void)
 {
 	uint32_t temp=0;
-	uint16_t i=0,l=0;
+	uint16_t i=0;
 	cdatatrans.Position=pose.orig;
 	cdatatrans.Load	= force.filterTrans;
 	cdatatrans.Extensometer1 = strain1.filterTrans;
@@ -2082,7 +2081,7 @@ void CurrentData_Fifo_Push(void)
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&cdatatrans.outputFrequency),cdatabuf,&i);
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&cdatatrans.outputDAC),cdatabuf,&i);
 	/* Fun_18416 */
-	  send_ring_fifo_push(i,cdatabuf,DOPECURRENTDATA);//下位机会返回0xA0功能码
+	  send_ring_fifo_push(i,cdatabuf,DOPECURRENTDATA);//下位机会返回0xA0功能�?
 	
 #ifdef CurrentData_debug
 		for(k=0;k<SEND_FIFO_SIZE;k++)
@@ -2122,7 +2121,7 @@ void Variable_Type_Conversion(uint8_t type,uint32_t x,uint8_t* buf,uint16_t* buf
 }
 
 /* Fun_18325 */
-void RDSENSORDATA_Process(void)//读取传感器数据
+void RDSENSORDATA_Process(void)//读取传感器数�?
 {
 	// uint32_t temp=0;
 	uint16_t i=5;
@@ -2130,7 +2129,7 @@ void RDSENSORDATA_Process(void)//读取传感器数据
 	float sensorCorrectionFactorTemp;
 	commBuf.Command = RDSENSORDATA;//用于在loopcontrol中作模式切换
 	//运动模式发生改变
-	sensorConnector = buf_data_save[i++];
+	sensorConnector = (sensorConnector_e)buf_data_save[i++];
 	log_i("RDSENSORDATA Connector=%d\t",sensorConnector);
 	/* Fun_18410 */
 	memset(buf_com,0,sizeof(buf_com));//buf清空
@@ -2160,18 +2159,18 @@ void RDSENSORDATA_Process(void)//读取传感器数据
 			Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&sensorCorrectionFactorTemp),buf_com,&i);//DataTransmitPeriod
 		}
 	}
-	send_ring_fifo_push(i,buf_com,0x88);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,0x88);//下位机会返回0x88功能�?
 }
 
 /* Fun_18326 */
-void WRSENSORDATA_Process(void)//写入传感器数据
+void WRSENSORDATA_Process(void)//写入传感器数�?
 {
 	uint32_t temp=0; 
 	uint16_t i=5;
 	uint8_t j=0;
 	commBuf.Command = WRSENSORDATA;//用于在loopcontrol中作模式切换
 	//运动模式发生改变
-	sensorConnector = buf_data_save[i++];
+	sensorConnector = (sensorConnector_e)buf_data_save[i++];
 	senDataCommbuf[sensorConnector].Sensortype = buf_data_save[i++];
 	senDataCommbuf[sensorConnector].Sign = buf_data_save[i++];
 	temp += (buf_data_save[i++]<<24);temp += (buf_data_save[i++]<<16);temp += (buf_data_save[i++]<<8);temp += (buf_data_save[i++]);
@@ -2226,7 +2225,7 @@ void RDSENSORBIGDEFORMATIONDATA_Process(void)//读取大变形传感器数据
 	// uint8_t j=0;
 	commBuf.Command = RDSENSORBIGDEFORMATIONDATA;//用于在loopcontrol中作模式切换
 	//运动模式发生改变
-	sensorConnector = buf_data_save[i++];
+	sensorConnector = (sensorConnector_e)buf_data_save[i++];
 	printf("RDSENSORDATA Connector=%d\t\r\n",sensorConnector);
 	/* Fun_18411 */
 	memset(buf_com,0,sizeof(buf_com));//buf清空
@@ -2242,7 +2241,7 @@ void RDSENSORBIGDEFORMATIONDATA_Process(void)//读取大变形传感器数据
 	Variable_Type_Conversion(UINT8_TYPE,(uint32_t)SensorBigDeformationData[sensorConnector].Month,buf_com,&i);//DataTransmitPeriod
 	Variable_Type_Conversion(UINT16_TYPE,(uint32_t)SensorBigDeformationData[sensorConnector].Year,buf_com,&i);//DataTransmitPeriod
 
-	send_ring_fifo_push(i,buf_com,0x89);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,0x89);//下位机会返回0x88功能�?
 }
 
 /* Fun_18328 */
@@ -2252,7 +2251,7 @@ void WRSENSORBIGDEFORMATIONDATA_Process(void)//写入大变形传感器数据
 	uint16_t i=5;
 	commBuf.Command = WRSENSORBIGDEFORMATIONDATA;//用于在loopcontrol中作模式切换
 	//运动模式发生改变
-	sensorConnector = buf_data_save[i++];
+	sensorConnector = (sensorConnector_e)buf_data_save[i++];
 	SensorBigDeformationData[sensorConnector].Sensortype = buf_data_save[i++];
 	SensorBigDeformationData[sensorConnector].Sign = buf_data_save[i++];
 	temp += (buf_data_save[i++]<<24);temp += (buf_data_save[i++]<<16);temp += (buf_data_save[i++]<<8);temp += (buf_data_save[i++]);
@@ -2268,9 +2267,9 @@ void WRSENSORBIGDEFORMATIONDATA_Process(void)//写入大变形传感器数据
 	SensorBigDeformationData[sensorConnector].Year= temp;temp=0;
 	
 	
-//	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重复
-//		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一致
-//					return; //如果指令重复则返回 不做操作
+//	if(commBuf.Command == AL.command)//判断上次指令和本次指令是否重�?
+//		if(	memcmp(&commBuf,&commBufLast,sizeof(commBuf)) == 0)	//判断数据具体参数是否一�?
+//					return; //如果指令重复则返�?不做操作
 	
 	
 	printf("Connector=%d\t\r\n",sensorConnector);
@@ -2286,7 +2285,7 @@ void WRSENSORBIGDEFORMATIONDATA_Process(void)//写入大变形传感器数据
 }
 
 /* Fun_1835 */
-void DOPERDNOMINALACCSPEED_Process(void)//读取位置生成器标称值
+void DOPERDNOMINALACCSPEED_Process(void)//读取位置生成器标称�?
 {
 	// uint32_t temp=0;
 	uint16_t i=5;
@@ -2320,12 +2319,12 @@ void DOPERDNOMINALACCSPEED_Process(void)//读取位置生成器标称值
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&p->Nominal.Acc),buf_com,&i);//DataTransmitPeriod
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&p->Nominal.Speed),buf_com,&i);//DataTransmitPeriod
 
-	send_ring_fifo_push(i,buf_com,0x83);//下位机会返回0x83功能码
+	send_ring_fifo_push(i,buf_com,0x83);//下位机会返回0x83功能�?
 	
 }
 
 /* Fun_1836 */
-void DOPESETNOMINALACCSPEED_Process(void)//设置位置生成器标称值
+void DOPESETNOMINALACCSPEED_Process(void)//设置位置生成器标称�?
 {
 	uint32_t temp=0; 
 	uint16_t i=5;
@@ -2507,7 +2506,7 @@ void DOPERDSPEEDPID_Process(void)//读取速度PID参数
 		break;
 		default:break;
 	}
-	send_ring_fifo_push(i,buf_com,0x86);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,0x86);//下位机会返回0x88功能�?
 }
 
 /* Fun_18320 */
@@ -2614,7 +2613,7 @@ void DOPEFEEDFORWARD_Process(void)//设置速度前馈参数指令
 }
 
 /* Fun_ */
-void UTC_SET_ON_POS_MSG_Process(utcSetOnPosMsg_t *_utcSetOnPosMsg)//移动指令完成后,下位机发送通知PC
+void UTC_SET_ON_POS_MSG_Process(utcSetOnPosMsg_t *_utcSetOnPosMsg)//移动指令完成�?下位机发送通知PC
 {
 	uint16_t i=0;
 	_utcSetOnPosMsg->DoPError = 0;
@@ -2630,11 +2629,11 @@ void UTC_SET_ON_POS_MSG_Process(utcSetOnPosMsg_t *_utcSetOnPosMsg)//移动指令
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&_utcSetOnPosMsg->Destination),buf_com,&i);
 	Variable_Type_Conversion(UINT16_TYPE,(uint32_t)_utcSetOnPosMsg->usTAN,buf_com,&i);
 
-	send_ring_fifo_push(i,buf_com,UTC_SET_ON_POS_MSG);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,UTC_SET_ON_POS_MSG);//下位机会返回0x88功能�?
 }
 
 /* Fun_ */
-void UTC_SET_ON_TPOS_MSG_Process(utcSetOnTPosMsg_t *_utcSetOnTPosMsg)//移动指令完成后,下位机发送通知PC
+void UTC_SET_ON_TPOS_MSG_Process(utcSetOnTPosMsg_t *_utcSetOnTPosMsg)//移动指令完成�?下位机发送通知PC
 {
 	uint16_t i=0;
 	_utcSetOnTPosMsg->DoPError = 0;
@@ -2650,11 +2649,11 @@ void UTC_SET_ON_TPOS_MSG_Process(utcSetOnTPosMsg_t *_utcSetOnTPosMsg)//移动指
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&_utcSetOnTPosMsg->Destination),buf_com,&i);
 	Variable_Type_Conversion(UINT16_TYPE,(uint32_t)_utcSetOnTPosMsg->usTAN,buf_com,&i);
 
-	send_ring_fifo_push(i,buf_com,UTC_SET_ON_TPOS_MSG);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,UTC_SET_ON_TPOS_MSG);//下位机会返回0x88功能�?
 }
 
 /* Fun_ */
-void UTC_SET_ON_LPOS_MSG_Process(utcSetOnLPosMsg_t *_utcSetOnLPosMsg)//移动指令完成后,下位机发送通知PC
+void UTC_SET_ON_LPOS_MSG_Process(utcSetOnLPosMsg_t *_utcSetOnLPosMsg)//移动指令完成�?下位机发送通知PC
 {
 	uint16_t i=0;
 	_utcSetOnLPosMsg->DoPError = 0;
@@ -2670,11 +2669,11 @@ void UTC_SET_ON_LPOS_MSG_Process(utcSetOnLPosMsg_t *_utcSetOnLPosMsg)//移动指
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&_utcSetOnLPosMsg->Destination),buf_com,&i);
 	Variable_Type_Conversion(UINT16_TYPE,(uint32_t)_utcSetOnLPosMsg->usTAN,buf_com,&i);
 
-	send_ring_fifo_push(i,buf_com,UTC_SET_ON_LPOS_MSG);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,UTC_SET_ON_LPOS_MSG);//下位机会返回0x88功能�?
 }
 
 /* Fun_ */
-void UTC_SET_ON_SFT_MSG_Process(utcSetOnSftMsg_t *_utcSetOnSftMsg)//移动指令完成后,下位机发送通知PC
+void UTC_SET_ON_SFT_MSG_Process(utcSetOnSftMsg_t *_utcSetOnSftMsg)//移动指令完成�?下位机发送通知PC
 {
 	uint16_t i=0;
 	_utcSetOnSftMsg->DoPError = 0;
@@ -2692,11 +2691,11 @@ void UTC_SET_ON_SFT_MSG_Process(utcSetOnSftMsg_t *_utcSetOnSftMsg)//移动指令
 	Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&_utcSetOnSftMsg->Position),buf_com,&i);
 	Variable_Type_Conversion(UINT16_TYPE,(uint32_t)_utcSetOnSftMsg->usTAN,buf_com,&i);
 
-	send_ring_fifo_push(i,buf_com,UTC_SET_ON_SFT_MSG);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,UTC_SET_ON_SFT_MSG);//下位机会返回0x88功能�?
 }
 
 /* Fun_ */
-void UTC_SET_ON_RUNTIME_MSG_Process(utcSetOnRuntimeError_t *_utcSetOnRuntimeError)//移动指令完成后,下位机发送通知PC
+void UTC_SET_ON_RUNTIME_MSG_Process(utcSetOnRuntimeError_t *_utcSetOnRuntimeError)//移动指令完成�?下位机发送通知PC
 {
 	uint16_t i=0;
 	_utcSetOnRuntimeError->DoPError = 0;
@@ -2714,11 +2713,11 @@ void UTC_SET_ON_RUNTIME_MSG_Process(utcSetOnRuntimeError_t *_utcSetOnRuntimeErro
 	Variable_Type_Conversion(UINT8_TYPE,(uint32_t)_utcSetOnRuntimeError->Bits,buf_com,&i);
 	Variable_Type_Conversion(UINT16_TYPE,(uint32_t)_utcSetOnRuntimeError->usTAN,buf_com,&i);
 
-	send_ring_fifo_push(i,buf_com,UTC_SET_ON_RUNTIME_MSG);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,UTC_SET_ON_RUNTIME_MSG);//下位机会返回0x88功能�?
 }
 
 /* Fun_ */
-void UTC_SET_ON_SYSTEM_MSG_Process(utcSetOnSystemMsg_t *_utcSetOnSystemMsg)//移动指令完成后,下位机发送通知PC
+void UTC_SET_ON_SYSTEM_MSG_Process(utcSetOnSystemMsg_t *_utcSetOnSystemMsg)//移动指令完成�?下位机发送通知PC
 {
 	uint16_t i=0,j=0;
 	char * testString = "test of system msg";
@@ -2734,11 +2733,11 @@ void UTC_SET_ON_SYSTEM_MSG_Process(utcSetOnSystemMsg_t *_utcSetOnSystemMsg)//移
 		Variable_Type_Conversion(UINT8_TYPE,(uint32_t)_utcSetOnSystemMsg->Text[j],buf_com,&i);
 	}
 
-	send_ring_fifo_push(i,buf_com,UTC_SET_ON_SYSTEM_MSG);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,UTC_SET_ON_SYSTEM_MSG);//下位机会返回0x88功能�?
 }
 
 /* Fun_ */
-void UTC_SET_ON_DEBUG_MSG_Process(utcSetOnDebugMsg_t *_utcSetOnDebugMsg)//移动指令完成后,下位机发送通知PC
+void UTC_SET_ON_DEBUG_MSG_Process(utcSetOnDebugMsg_t *_utcSetOnDebugMsg)//移动指令完成�?下位机发送通知PC
 {
 	uint16_t i=0,j=0;
 	char * testString = "test of debug msg";
@@ -2754,7 +2753,7 @@ void UTC_SET_ON_DEBUG_MSG_Process(utcSetOnDebugMsg_t *_utcSetOnDebugMsg)//移动
 		Variable_Type_Conversion(UINT8_TYPE,(uint32_t)_utcSetOnDebugMsg->Text[j],buf_com,&i);
 	}
 
-	send_ring_fifo_push(i,buf_com,UTC_SET_ON_DEBUG_MSG);//下位机会返回0x88功能码
+	send_ring_fifo_push(i,buf_com,UTC_SET_ON_DEBUG_MSG);//下位机会返回0x88功能�?
 }
 
 void sendUtcSetOn(void){

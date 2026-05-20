@@ -851,14 +851,14 @@ void workModeMonitor(WORK_MODE_STRUCT* Wm,WORK_STATE_STRUCT* Ws){
 			Ws->loopCtrl = loopCtrlScomplete;
 		}else{
 			Ws->loopCtrl |= loopCtrlSmove;
-			// if(speedPose.filter > 1.0E-5){
-			if(speedPose.filter > 1.0E-5){
+			// if(speedPose.filter > 1.0E-5f){
+			if(speedPose.filter > 1.0E-5f){
 				Ws->loopCtrl |= loopCtrlSup;
 			}else{
 				Ws->loopCtrl &= (~loopCtrlSup);
 			}
 
-			if(speedPose.filter < -(1.0E-5)){
+			if(speedPose.filter < -(1.0E-5f)){
 				Ws->loopCtrl |= loopCtrlSdown;
 			}else{
 				Ws->loopCtrl &= (~loopCtrlSdown);
@@ -1391,7 +1391,7 @@ void emergencyForceHalt(void)
 	svAO.load = 0;
 	svAO.ext = 0;
 	//SON OFF
-	DO.SON = 0;
+	DO.SON = GPIO_PIN_RESET;
 	//clear pid
 	pidInitPos();
 	 pid_pos.calcuRun = 0;
@@ -1514,3 +1514,5 @@ void stm32SoftReset(void)
 	 __set_PRIMASK(1);
    HAL_NVIC_SystemReset();//软件复位
  }
+
+ 

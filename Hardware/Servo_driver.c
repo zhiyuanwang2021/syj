@@ -552,11 +552,12 @@ uint8_t servoRegionSelcet(const uint8_t _nowRegion,const float _fclk){
 	}
 	// dir: 0 means left ;1 means right
 	if(_dir == 0){
-		for(i = _nowRegion-1;i>=0;i--){
-			if(_fclk >= SFH_fclk_1[i]){
+		for(i = _nowRegion; i > 0; i--){
+			if(_fclk >= SFH_fclk_1[i - 1]){
+				i = i - 1;
 				break;
 			}
-		}	
+		}
 	}else if(_dir == 1){
 		for(i = _nowRegion+1;i<6;i++){
 			if(_fclk <= SFH_fclk_2[i]){

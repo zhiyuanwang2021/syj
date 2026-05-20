@@ -1,26 +1,25 @@
 /*******************************************************************************
- *  Copyright (c) [scl]銆備繚鐣欐墍鏈夋潈鍒╋拷?
- *     锟�?鏂囦粎渚涗釜浜猴拷?锟戒範鍜岀爺绌朵娇锟�?锛岋拷?锟斤拷?锟界敤浜庡晢涓氱敤閫旓拷?
+ *  Copyright (c) [scl]閵嗗倷绻氶悾娆愬閺堝娼堥崚鈺嬫嫹?
+ *     閿燂拷?閺傚洣绮庢笟娑楅嚋娴滅尨鎷�?閿熸垝绡勯崪宀€鐖虹粚鏈靛▏閿燂拷?閿涘矉鎷�?閿熸枻鎷�?閿熺晫鏁ゆ禍搴℃櫌娑撴氨鏁ら柅鏃撴嫹?
  ******************************************************************************/
 #include "modbus_slave.h"
 #include "in_out.h"
 #include "RS485.h"
 
-#ifndef sign(x)
+#ifndef sign
 	#define sign(x) ((x)>0?1:((x)<0?-1:1))
 #endif
 
 #define data_frame_min_len 8
 static mb_slave_parse_data_t packet;
 static modbus_slave_t *rtu_slave;
-static bool *cache_status_buf;
 static uint8_t *cache_buf;
 #define mb_rtu_ret(cond, fn)  (cond) ? fn: rsp_nut_support_cmd
 
 void modbus_slave_rtu_init(modbus_slave_t *slave, uint8_t *in_cache_buf, bool *in_status_cache) {
     rtu_slave = slave;
     cache_buf = in_cache_buf;
-    cache_status_buf = in_status_cache;
+    (void)in_status_cache;
 }
 
 static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr);
@@ -28,19 +27,19 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr);
 static inline uint16_t rtu_add_crc(uint8_t *ret_data, uint16_t len);
 
 void modbus_rtu_poll(uint8_t *data, uint16_t len) {
-    /*楠岃瘉鏁版嵁闀垮害锟�?鍚︿笉灏忎簬鏈€灏忓抚锟�?*/
+    /*妤犲矁鐦夐弫鐗堝祦闂€鍨閿燂拷?閸氾缚绗夌亸蹇庣艾閺堚偓鐏忓繐鎶氶敓锟�?*/
     sys_assert_void(len >= data_frame_min_len);
-    /*楠岃瘉浠庢満鍦板潃锟�?鍚︿竴锟�?*/
+    /*妤犲矁鐦夋禒搴㈡簚閸︽澘娼冮敓锟�?閸氾缚绔撮敓锟�?*/
     sys_assert_void(data[0] == rtu_slave->slave_addr);
-    /*鏁版嵁crc鏍￠獙*/
+    /*閺佺増宓乧rc閺嶏繝鐛�*/
     sys_assert_void(modbus_crc_compute(data, len) == 0);
     data_parse(data, &packet);
-    /*鏁版嵁澶勭悊*/
-    uint16_t resp_len = 0;/*鍝嶅簲鏁版嵁闀垮害*/
-    uint8_t resp_code = rsp_nut_support_cmd;/*鍝嶅簲锟�?*/
+    /*閺佺増宓佹径鍕倞*/
+    uint16_t resp_len = 0;/*閸濆秴绨查弫鐗堝祦闂€鍨*/
+    uint8_t resp_code = rsp_nut_support_cmd;/*閸濆秴绨查敓锟�?*/
     switch (packet.func_code) {
-        case 0x3: /*璇讳繚鎸佸瘎瀛樺櫒*/
-        case 0x4: /*璇昏緭鍏ュ瘎瀛樺櫒*/
+        case 0x3: /*鐠囪绻氶幐浣哥槑鐎涙ê娅�*/
+        case 0x4: /*鐠囨槒绶崗銉ョ槑鐎涙ê娅�*/
         {
             if (packet.func_code == 0x3) {
                 resp_code = mb_rtu_ret(rtu_slave->api.read_hold_reg != NULL,
@@ -60,8 +59,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             }
             break;
         }
-        case 0x1: /*璇荤嚎鍦堢姸锟�?*/
-        case 0x2: /*璇昏緭鍏ョ姸锟�?*/
+        case 0x1: /*鐠囪崵鍤庨崷鍫㈠Ц閿燂拷?*/
+        case 0x2: /*鐠囨槒绶崗銉уЦ閿燂拷?*/
         {
             // if (packet.func_code == 0x1) {
             //     resp_code = mb_rtu_ret(rtu_slave->api.read_coil_state != NULL,
@@ -75,7 +74,7 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             // if (resp_code == rsp_ok) {
             //     cache_buf[resp_len++] = packet.slave_addr;
             //     cache_buf[resp_len++] = packet.func_code;
-            //     // 杩斿洖鐨勫瓧鑺傛暟
+            //     // 鏉╂柨娲栭惃鍕摟閼哄倹鏆�
             //     if (packet.reg_num % 8 == 0) {
             //         cache_buf[resp_len++] = packet.reg_num / 8;
             //     } else {
@@ -85,8 +84,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             // }
         }
             break;
-        case 0x06:/*鍐欎竴锟�?瀵勫瓨锟�?*/
-        case 0x05:/*鍐欎竴锟�?绾垮湀*/
+        case 0x06:/*閸愭瑤绔撮敓锟�?鐎靛嫬鐡ㄩ敓锟�?*/
+        case 0x05:/*閸愭瑤绔撮敓锟�?缁惧灝婀€*/
         {
             if (packet.func_code == 0x05) {
                 resp_code = mb_rtu_ret(rtu_slave->api.write_one_coil != NULL,
@@ -102,8 +101,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             }
             break;
         }
-        case 0x10:/*鍐欙拷?锟戒釜瀵勫瓨锟�?*/
-        case 0x0F:/*鍐欙拷?锟戒釜绾垮湀*/
+        case 0x10:/*閸愭瑱鎷�?閿熸垝閲滅€靛嫬鐡ㄩ敓锟�?*/
+        case 0x0F:/*閸愭瑱鎷�?閿熸垝閲滅痪鍨箑*/
         {
             // if (packet.func_code == 0x0F) {
             //     un_pack_bool(cache_status_buf, packet.reg_num, packet.data, packet.data_len);
@@ -150,20 +149,20 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr) {
     ptr->reg_addr = cv_u8_to_16(data + idx);
     idx += 2;
     switch (ptr->func_code) {
-        case 0x3: /*璇讳繚鎸佸瘎瀛樺櫒*/
-        case 0x4: /*璇昏緭鍏ュ瘎瀛樺櫒*/
-        case 0x1: /*璇荤嚎鍦堢姸锟�?*/
-        case 0x2: /*璇昏緭鍏ョ姸锟�?*/
+        case 0x3: /*鐠囪绻氶幐浣哥槑鐎涙ê娅�*/
+        case 0x4: /*鐠囨槒绶崗銉ョ槑鐎涙ê娅�*/
+        case 0x1: /*鐠囪崵鍤庨崷鍫㈠Ц閿燂拷?*/
+        case 0x2: /*鐠囨槒绶崗銉уЦ閿燂拷?*/
             ptr->reg_num = cv_u8_to_16(data + idx);
             idx += 2;
             break;
-        case 0x06:/*鍐欎竴锟�?瀵勫瓨锟�?*/
-        case 0x05:/*鍐欎竴锟�?绾垮湀*/
+        case 0x06:/*閸愭瑤绔撮敓锟�?鐎靛嫬鐡ㄩ敓锟�?*/
+        case 0x05:/*閸愭瑤绔撮敓锟�?缁惧灝婀€*/
             ptr->data = data + idx;
             ptr->data_len = 2;
             break;
-        case 0x10:/*鍐欙拷?锟戒釜瀵勫瓨锟�?*/
-        case 0x0F:/*鍐欙拷?锟戒釜绾垮湀*/
+        case 0x10:/*閸愭瑱鎷�?閿熸垝閲滅€靛嫬鐡ㄩ敓锟�?*/
+        case 0x0F:/*閸愭瑱鎷�?閿熸垝閲滅痪鍨箑*/
             ptr->reg_num = cv_u8_to_16(data + idx);
             idx += 2;
             ptr->data_len = data[idx++];
@@ -173,7 +172,7 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr) {
 }
 
 
-/***************************************************************鍏蜂綋瀹炵幇********************************************************/
+/***************************************************************閸忚渹缍嬬€圭偟骞�********************************************************/
 uint16_t reg_start_addr = 0x000;
 
 regHoldreg_u holdreg={
@@ -202,7 +201,7 @@ uint8_t reg_buf[MAX_REG_BUF_LEN] = {0x00, 0x01,0x00,0x00};//note storage format
  */
 slave_rsp_code_def Slave_ReadInputReg(uint16_t regAddr, uint16_t regNum, uint8_t *retData) {
     printf("Slave_ReadInputReg reg: %X; num:%d\n", regAddr, regNum);
-	return 0;
+	return rsp_ok;
 }
 
 /**
@@ -282,6 +281,7 @@ slave_rsp_code_def Slave_WriteOneReg(uint16_t regAddr, uint16_t data) {
 slave_rsp_code_def Slave_ReadHoldReg(uint16_t regAddr, uint16_t regNum, uint8_t *retData) {
     uint8_t i = 0,k=0;
     uint32_t poseInt32,poseSpeedInt32,loadInt32,strainInt32;
+    int32_t poseSign, poseSpeedSign, loadSign, strainSign;
     float _pose,_poseSpeed,_load,_strain;
 	if (regAddr < reg_start_addr) {
 		return rsp_err_reg_addr;
@@ -291,20 +291,25 @@ slave_rsp_code_def Slave_ReadHoldReg(uint16_t regAddr, uint16_t regNum, uint8_t 
         _poseSpeed = speedPose.filter;
         _load = force.filterTrans;
         _strain = strain1.filterTrans;
-        poseInt32 		= (uint32_t)((_pose * 1e6)*sign(_pose));
-        if(sign(_pose) == -1){
+        poseSign = sign(_pose);
+        poseSpeedSign = sign(_poseSpeed);
+        loadSign = sign(_load);
+        strainSign = sign(_strain);
+
+        poseInt32 		= (uint32_t)((_pose * 1e6f) * poseSign);
+        if(poseSign == -1){
             poseInt32 = poseInt32 | 0x80000000;
         }
-        poseSpeedInt32 	= (uint32_t)((_poseSpeed * 1e6)*sign(_poseSpeed));
-        if(sign(_poseSpeed) == -1){
+        poseSpeedInt32 	= (uint32_t)((_poseSpeed * 1e6f) * poseSpeedSign);
+        if(poseSpeedSign == -1){
             poseSpeedInt32 = poseSpeedInt32 | 0x80000000;
         }
-        loadInt32 		= (uint32_t)((_load * 1e3)*sign(_load));
-        if(sign(_load) == -1){
+        loadInt32 		= (uint32_t)((_load * 1e3f) * loadSign);
+        if(loadSign == -1){
             loadInt32 = loadInt32 | 0x80000000;
         }
-        strainInt32 	= (uint32_t)((_strain * 1e6)*sign(_strain));
-        if(sign(_strain) == -1){
+        strainInt32 	= (uint32_t)((_strain * 1e6f) * strainSign);
+        if(strainSign == -1){
             strainInt32 = strainInt32 | 0x80000000;
         }
 
@@ -338,12 +343,13 @@ slave_rsp_code_def Slave_ReadHoldReg(uint16_t regAddr, uint16_t regNum, uint8_t 
  */
 slave_rsp_code_def Slave_ReadInputState(uint16_t regAddr, uint16_t regNum, bool *retData) {
     uint8_t i = 0;
+    const bool coil_1 = false;
+    const bool coil_2 = true;
     switch (regAddr)
     {
     case 0x00:
         /*********application code*********/
         //e.g.
-        bool coil_1 = false;//in fact,these coils must be defined in global variable
         retData[i++] = coil_1;
         /*********application code*********/
         if(--regNum <= 0)
@@ -351,14 +357,12 @@ slave_rsp_code_def Slave_ReadInputState(uint16_t regAddr, uint16_t regNum, bool 
     case 0x01:
         /*********application code*********/
         //e.g.
-        bool coil_2 = true;//in fact,these coils must be defined in global variable
         retData[i++] = coil_2;
         /*********application code*********/
         if(--regNum <= 0)
             break;
     default:
         return rsp_err_reg_addr;
-        break;
     }
 #ifdef DEBUG_READ_INPUT_STATE
     printf("Slave_ReadInputState regAddr: %X; regNum:%d\r\n", regAddr, regNum);
@@ -402,7 +406,6 @@ slave_rsp_code_def Slave_WriteMulCoils(uint16_t regAddr, uint16_t regNum, bool *
             break;
         default:
             return rsp_err_reg_addr;
-            break;
         }
 
     }

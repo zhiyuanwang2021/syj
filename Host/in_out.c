@@ -715,7 +715,7 @@ void loadFilterWithLenSwitch(MDSTRUCT *x, FILTER *filter, uint16_t filter_depth)
 #define FILTER_LEN2 10
 void load_filter_SL2(uint16_t filter_depth)
 {
-	static uint16_t i = 0, depthLast = FILTER_LEN2;
+	static uint16_t i = 0;
 	// uint16_t j;
 	i++;
 	if (i >= FILTER_LEN2)
@@ -725,7 +725,6 @@ void load_filter_SL2(uint16_t filter_depth)
 	filterSL2.force_temp += filterSL2.force_buf[i];
 	forceSL2.filter = filterSL2.force_temp / (filter_depth * 1.0);
 	// forceSL.filter = forceSL.filter*0.9 + forceSL.filter_last*0.1;
-	depthLast = filter_depth;
 }
 
 /**
@@ -1251,7 +1250,6 @@ extern uint16_t pwmFinishcounter;
  */
 void closeloopOutputMap(OUTPUTPARA *op)
 {
-	int32_t  j = 0;
 	// uint32_t utmp = 0;
 	// static int32_t fclkcounters;
 	// map hal DO

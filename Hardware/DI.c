@@ -55,7 +55,7 @@ void DB9Detect_ReadALL(void){
 /**
  * @brief the state machine is used to eliminate the dither of DI
  * @param[in]		PinState Pinstate of halDI
- * @param[in]		x DI_DETECT_STRUCT,Used to handle state machine processesï¼?
+ * @param[in]		x DI_DETECT_STRUCT,Used to handle state machine processesé”›?
  * 					record press time and pinstate after eliminating dither
  * @param[in]		PinStatePress the state after DI being pressed
 */
@@ -100,7 +100,7 @@ GPIO_PinState DIDetect(GPIO_PinState PinState,DI_DETECT_STRUCT* x,GPIO_PinState 
     case YES_PRESS:
         x->value = PinStatePress;
         x->pressTime += (currentTick - x->timRecordYesPress);
-        if(x->pressTime > 4000000000U)//4,000,000s â‰?46days
+        if(x->pressTime > 4000000000U)//4,000,000s éˆ®?46days
             x->pressTime = 4000000000U;
         x->timRecordYesPress = currentTick;
         if(PinState == PinStateRelease){

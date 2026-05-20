@@ -115,10 +115,7 @@ float pidCalPos(float setValue,float realValue,pid_t* pid){
 
 
 float pidCalLoad(double setValue,double realValue,pid_t* pid){
-    static uint8_t _record = 0,modeRecord = 0;
 	int index = 1;
-	float output,preOut;
-    float kpFenli = 0;
     pid->setValue=setValue;
     pid->err=setValue-realValue;
 
@@ -131,12 +128,11 @@ float pidCalLoad(double setValue,double realValue,pid_t* pid){
         // if(fabs(setValue-AL.loadCtrl.setPos) <= fabs(AL.loadCtrl.setPos)*0.01){
         //     pid->kiSeparate = pid->kp*0.2;
         //     pid->kpSeparate = pid->kp*0.2;
-        //     if(_record == 0){
+        //     if(1){
         //       pid->integral = 0;
-        //       _record = 1;
+        //       ;
         //     } 
         // }else{
-            _record = 0;
             pid->kiSeparate = pid->ki;
             pid->kpSeparate = pid->kp;
         //}
@@ -146,7 +142,6 @@ float pidCalLoad(double setValue,double realValue,pid_t* pid){
         pid->integral += pid->kiSeparate*(pid->err - pid->outdeta);
         pid->index = index;
         pid->out=pid->kpSeparate*pid->err+index*pid->integral + pid->kd * (pid->err - pid->errLast);
-        preOut = pid->out;
         pid->out = pidLimit(pid->out,pid->outMAx,pid->outMin);
         pid->outdeta = 0;
     }

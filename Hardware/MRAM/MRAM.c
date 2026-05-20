@@ -154,3 +154,4 @@ uint8_t MRAM_READ(uint32_t address,uint8_t* Data,uint16_t size)
 #endif
 	return err;
 }
+

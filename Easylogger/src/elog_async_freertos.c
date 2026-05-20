@@ -66,8 +66,6 @@
 /* asynchronous output log notice */
 static osSemaphoreId output_noticeHandle;
 
-/* asynchronous output pthread thread */
-static osThreadId elogasynctaskHandle;
 #endif /* ELOG_ASYNC_OUTPUT_ENABLE */
 
 /* the highest output level for async mode, other level will sync output */
@@ -283,7 +281,11 @@ void elog_async_output(uint8_t level, const char *log, size_t size) {
     size_t put_size;
 
     if (is_enabled) {
+#if OUTPUT_LVL == ELOG_LVL_ASSERT
+        if (1) {
+#else
         if (level >= OUTPUT_LVL) {
+#endif
             put_size = async_put_log(log, size);
             /* notify output log thread */
             if (put_size > 0) {
@@ -374,7 +376,7 @@ ElogErrCode elog_async_init(void) {
   thread_running = true;
   //elogtask creat
   osThreadDef(elogasynctask, elog_async_task, ELOG_ASYNC_OUTPUT_THREAD_PRIORITY, 0, ELOG_ASYNC_OUTPUT_THREAD_STACK_SIZE);
-  elogasynctaskHandle = osThreadCreate(osThread(elogasynctask), NULL);
+  osThreadCreate(osThread(elogasynctask), NULL);
 #endif
 
     init_ok = true;
