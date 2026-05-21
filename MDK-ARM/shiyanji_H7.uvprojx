@@ -720,6 +720,16 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\MRAM\MRAM.c</FilePath>
             </File>
+            <File>
+              <FileName>filter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\filter.c</FilePath>
+            </File>
+            <File>
+              <FileName>CS5552.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\CS5552.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1608,36 +1618,6 @@
               <FileName>modbus_common.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\ModbusLib\include\modbus_common.h</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>CS5530</GroupName>
-          <Files>
-            <File>
-              <FileName>CS553X.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CS5530\CS553X.c</FilePath>
-            </File>
-            <File>
-              <FileName>delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CS5530\delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>io_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CS5530\io_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>user.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CS5530\user.c</FilePath>
-            </File>
-            <File>
-              <FileName>filter.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\CS5530\filter.c</FilePath>
             </File>
           </Files>
         </Group>

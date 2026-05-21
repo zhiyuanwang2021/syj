@@ -2,7 +2,6 @@
 #define __USER_H__
 
 #include "main.h"
-// #include "dma.h"
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
@@ -12,6 +11,61 @@
 #include "stdio.h"
 #include "string.h"
 #include "stdbool.h"
+
+/* Legacy CS5530 compatibility definitions moved from CS553X.h */
+#define CMD_NULL            0x00
+#define CMD_SYNC0           0xFE
+#define CMD_SYNC1           0xFF
+#define RW_WRITE            0x00
+#define RW_READ             0x01
+#define REG_OFFSET          0x01
+#define REG_GAIN            0x02
+#define REG_CFG             0x03
+#define REG_SYS_OFFSET_CAL  0x05
+#define REG_SYS_GAIN_CAL    0x06
+#define MC_ONE              0x00
+#define MC_CONV             0x01
+#define FRS_0               0
+#define FRS_1               1
+#define FRS_Mode            FRS_1
+#define WR_120Hz            0x00
+#define WR_60Hz             0x01
+#define WR_30Hz             0x02
+#define WR_15Hz             0x03
+#define WR_7_5Hz            0x04
+#define WR_3840Hz           0x08
+#define WR_1920Hz           0x09
+#define WR_960Hz            0x0A
+#define WR_480Hz            0x0B
+#define WR_240Hz            0x0C
+#define VREF_0              0x00
+#define VREF_1              0x01
+#define ADC_VREF            VREF_1
+#define Unipolar            0x01
+#define Bipolar             0x00
+
+typedef enum{
+    cs5530Channel1 = 0,
+    cs5530Channel2,
+    cs5530Channel3,
+    cs5530ChannelNumMax,
+}cs5530Channel_e;
+
+typedef enum{
+    cs5530NoStart = 0,
+    cs5530RunNormal,
+    cs5530RunAbnormal,
+}cs5530RunState_e;
+
+typedef struct{
+    uint8_t runState;
+    uint8_t csChannel;
+    int32_t Code[cs5530ChannelNumMax];
+    float Voltage[cs5530ChannelNumMax];
+    float Value[cs5530ChannelNumMax];
+}cs5530_t;
+
+extern cs5530_t cs5530;
 #define CS5552_HSPI  (&hspi3)
 
 /* 多芯片片选索引 */
@@ -156,6 +210,23 @@ void CS5552_CS_HIGH(void);
 
 extern uint32_t raw;
 extern bool cs5552_ready;
+bool CS5552_LegacyDualInit(void);
+bool CS5552_ReadChipContDataNonBlocking(uint8_t chip, uint8_t pga_gain, int32_t *out_data, float *out_voltage);
+void CS5552_LegacyCs5530Init(cs5530_t *cs5530_ctx);
+void CS5552_LegacyCs5530DataGet(cs5530_t *cs5530_ctx);
+void CS5552_LegacyCs5530ResetMonitor(cs5530_t *cs5530_ctx);
+void adc_sw_Reset(void);
+void adc_Write_CFG_Register(unsigned char nVREF,unsigned char nFRS,unsigned char nWRX,unsigned char nUB);
+void adc_Read_CFG_Register(void);
+void adc_Write_Gain_Register(long int g_Value);
+void adc_Read_Gain_Register(void);
+void adc_Write_Offset_Register(long int r_Value);
+void adc_Initl(void);
+signed long int adc_Read_Data_Register(void);
+void cs5530MultiCollect(uint8_t channel);
+void cs5530Init(void);
+void cs5530DataGet(void);
+void cs5530ResetMonitor(void);
 void CS5552_Delay_Init(void);
 void CS5552_Delay_ms(uint32_t ms);
 void CS5552_Delay_us(uint32_t us);
@@ -179,8 +250,8 @@ bool CS5552_ParseConvData(uint32_t raw_data, uint8_t expected_channel, int32_t *
 
 float CS5552_ConvertToVoltage(int32_t raw_code, uint8_t pga_gain);
 
-// void LED_disp(uint8_t led);
-// void LED_proc(void);
+void LED_disp(uint8_t led);
+void LED_proc(void);
 void ADC_proc(void);
 
 #endif

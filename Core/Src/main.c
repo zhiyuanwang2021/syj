@@ -46,8 +46,7 @@
 
 // #include "delay.h"   // Legacy CS5530 software-SPI delay helper disabled during CS5552 migration.
 // #include "io_spi.h"  // Legacy CS5530 software-SPI GPIO driver disabled during CS5552 migration.
-#include "cs553X.h"
-#include "user.h"
+#include "CS5552.h"
 
 /* USER CODE END Includes */
 

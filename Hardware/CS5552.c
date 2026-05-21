@@ -1,12 +1,33 @@
-#include "user.h"
+﻿#include "CS5552.h"
+#include "filter.h"
 #include <stdio.h>
 #include <stdbool.h>
 
 static uint32_t s_us_ticks = 0;
+uint32_t raw = 0;
+bool cs5552_ready = false;
+cs5530_t cs5530;
 
 /* 多芯片片选管理 */
 static uint8_t  cs5552_chip = 0;
 static GPIO_TypeDef* cs_ports[2];
+static SlidingAvgFilter voltage_filter_ch0;
+static SlidingAvgFilter voltage_filter_ch1;
+
+static void CS5552_LegacyCs5530ClearData(cs5530_t *cs5530_ctx) {
+    uint8_t i;
+
+    if (cs5530_ctx == NULL) {
+        return;
+    }
+
+    for (i = 0; i < cs5530ChannelNumMax; i++) {
+        cs5530_ctx->Code[i] = 0;
+        cs5530_ctx->Voltage[i] = 0.0f;
+        cs5530_ctx->Value[i] = 0.0f;
+    }
+}
+
 static uint16_t     cs_pins[2];
 
 void CS5552_SelectChip(uint8_t chip) {
@@ -501,6 +522,31 @@ bool CS5552_SingleChannelRead(uint8_t conv_conf_idx, int32_t *out_data, uint8_t 
     return CS5552_ReadADC(out_data);   
 }
 
+bool CS5552_ReadChipContDataNonBlocking(uint8_t chip,
+                                        uint8_t pga_gain,
+                                        int32_t *out_data,
+                                        float *out_voltage) {
+    if (out_data == NULL || out_voltage == NULL) {
+        return false;
+    }
+
+    CS5552_SelectChip(chip);
+    CS5552_CS_LOW();
+
+    if (CS5552_SDO_READ() != GPIO_PIN_RESET) {
+        CS5552_CS_HIGH();
+        return false;
+    }
+
+    if (!CS5552_ReadADC(out_data)) {
+        CS5552_CS_HIGH();
+        return false;
+    }
+
+    CS5552_CS_HIGH();
+    *out_voltage = CS5552_ConvertToVoltage(*out_data, pga_gain);
+    return true;
+}
 float CS5552_ConvertToVoltage(int32_t raw_code, uint8_t pga_gain) {
     if (pga_gain == 0) {
         return 0.0f;
@@ -511,17 +557,218 @@ float CS5552_ConvertToVoltage(int32_t raw_code, uint8_t pga_gain) {
 }
 
 
-// void LED_disp(uint8_t led) {
-//     HAL_GPIO_WritePin(P_LEDWK0_GPIO_Port, P_LEDWK0_Pin, (led & 0x01) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-//     HAL_GPIO_WritePin(P_LEDWK1_GPIO_Port, P_LEDWK1_Pin, (led & 0x02) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-// }
-// static uint32_t led_tick = 0;
+bool CS5552_LegacyDualInit(void) {
+    uint8_t chip0_ready = 0;
+    uint8_t chip1_ready = 0;
 
-// void LED_proc(void) {
-//     if (HAL_GetTick() - led_tick < 200) {
-//         return;
-//     }
-//     led_tick = HAL_GetTick();
-//     HAL_GPIO_TogglePin(P_LEDWK0_GPIO_Port, P_LEDWK0_Pin);
-//     HAL_GPIO_TogglePin(P_LEDWK1_GPIO_Port, P_LEDWK1_Pin);
-// }
+    cs5552_ready = false;
+
+    CS5552_SelectChip(CS5552_CHIP_0);
+    if (CS5552_Init()) {
+        printf("CS5552-0 Init OK\r\n");
+        if (CS5552_StartContConv(CS5552_CONFIG_IDX_CH1)) {
+            chip0_ready = 1;
+        } else {
+            printf("CS5552-0 StartContConv Fail!\r\n");
+        }
+    } else {
+        printf("CS5552-0 Init Fail!\r\n");
+    }
+
+    CS5552_SelectChip(CS5552_CHIP_1);
+    if (CS5552_Init()) {
+        printf("CS5552-1 Init OK\r\n");
+        if (CS5552_StartContConv(CS5552_CONFIG_IDX_CH0)) {
+            chip1_ready = 1;
+        } else {
+            printf("CS5552-1 StartContConv Fail!\r\n");
+        }
+    } else {
+        printf("CS5552-1 Init Fail!\r\n");
+    }
+
+    Filter_Init(&voltage_filter_ch0);
+    Filter_Init(&voltage_filter_ch1);
+
+    cs5552_ready = (chip0_ready && chip1_ready) ? true : false;
+    return cs5552_ready;
+}
+
+void CS5552_LegacyCs5530Init(cs5530_t *cs5530_ctx)
+{
+    if (cs5530_ctx == NULL) {
+        return;
+    }
+
+    cs5530_ctx->runState = cs5530NoStart;
+    cs5530_ctx->csChannel = cs5530Channel1;
+    CS5552_LegacyCs5530ClearData(cs5530_ctx);
+
+    cs5552_ready = CS5552_LegacyDualInit();
+    cs5530_ctx->runState = cs5552_ready ? cs5530RunNormal : cs5530RunAbnormal;
+}
+
+void CS5552_LegacyCs5530DataGet(cs5530_t *cs5530_ctx)
+{
+    int32_t code = 0;
+    float voltage = 0.0f;
+
+    if (cs5530_ctx == NULL) {
+        return;
+    }
+
+    if (!cs5552_ready || cs5530_ctx->runState != cs5530RunNormal) {
+        return;
+    }
+
+    switch (cs5530_ctx->csChannel) {
+    case cs5530Channel1:
+        cs5530_ctx->Code[cs5530Channel1] = 0;
+        cs5530_ctx->Voltage[cs5530Channel1] = 0.0f;
+        cs5530_ctx->Value[cs5530Channel1] = 0.0f;
+        cs5530_ctx->csChannel = cs5530Channel2;
+        break;
+
+    case cs5530Channel2:
+        if (CS5552_ReadChipContDataNonBlocking(CS5552_CHIP_0, 128, &code, &voltage)) {
+            cs5530_ctx->Code[cs5530Channel2] = code;
+            cs5530_ctx->Voltage[cs5530Channel2] = voltage;
+            cs5530_ctx->Value[cs5530Channel2] = voltage;
+            cs5530_ctx->csChannel = cs5530Channel3;
+        }
+        break;
+
+    case cs5530Channel3:
+        if (CS5552_ReadChipContDataNonBlocking(CS5552_CHIP_1, 128, &code, &voltage)) {
+            cs5530_ctx->Code[cs5530Channel3] = code;
+            cs5530_ctx->Voltage[cs5530Channel3] = voltage;
+            cs5530_ctx->Value[cs5530Channel3] = voltage;
+            cs5530_ctx->csChannel = cs5530Channel1;
+        }
+        break;
+
+    default:
+        cs5530_ctx->csChannel = cs5530Channel1;
+        break;
+    }
+}
+
+void CS5552_LegacyCs5530ResetMonitor(cs5530_t *cs5530_ctx)
+{
+    static uint8_t abnormalCounter = 0;
+    static int32_t codeRecord[cs5530ChannelNumMax] = {0};
+
+    if (cs5530_ctx == NULL) {
+        return;
+    }
+
+    if (!cs5552_ready || cs5530_ctx->runState != cs5530RunNormal) {
+        codeRecord[cs5530Channel1] = cs5530_ctx->Code[cs5530Channel1];
+        codeRecord[cs5530Channel2] = cs5530_ctx->Code[cs5530Channel2];
+        codeRecord[cs5530Channel3] = cs5530_ctx->Code[cs5530Channel3];
+        abnormalCounter = 0;
+        return;
+    }
+
+    if ((cs5530_ctx->Code[cs5530Channel2] == codeRecord[cs5530Channel2]) &&
+        (cs5530_ctx->Code[cs5530Channel3] == codeRecord[cs5530Channel3])) {
+        abnormalCounter++;
+        if (abnormalCounter >= 100) {
+            cs5530_ctx->runState = cs5530RunAbnormal;
+            printf("CS5552 data monitor abnormal, reinit\r\n");
+            CS5552_LegacyCs5530Init(cs5530_ctx);
+            abnormalCounter = 0;
+        }
+    } else {
+        abnormalCounter = 0;
+    }
+
+    codeRecord[cs5530Channel1] = cs5530_ctx->Code[cs5530Channel1];
+    codeRecord[cs5530Channel2] = cs5530_ctx->Code[cs5530Channel2];
+    codeRecord[cs5530Channel3] = cs5530_ctx->Code[cs5530Channel3];
+}
+
+void adc_sw_Reset(void)
+{
+    /* Legacy CS5530 software reset is retired after CS5552 migration. */
+}
+
+void adc_Write_CFG_Register(unsigned char nVREF,
+                            unsigned char nFRS,
+                            unsigned char nWRX,
+                            unsigned char nUB)
+{
+    (void)nVREF;
+    (void)nFRS;
+    (void)nWRX;
+    (void)nUB;
+}
+
+void adc_Read_CFG_Register(void)
+{
+}
+
+void adc_Write_Gain_Register(long int g_Value)
+{
+    (void)g_Value;
+}
+
+void adc_Read_Gain_Register(void)
+{
+}
+
+void adc_Write_Offset_Register(long int r_Value)
+{
+    (void)r_Value;
+}
+
+void adc_Initl(void)
+{
+    cs5530.csChannel = cs5530Channel1;
+    CS5552_LegacyCs5530Init(&cs5530);
+}
+
+signed long int adc_Read_Data_Register(void)
+{
+    return 0;
+}
+
+void cs5530MultiCollect(uint8_t channel)
+{
+    (void)channel;
+}
+
+void cs5530Init(void)
+{
+    CS5552_LegacyCs5530Init(&cs5530);
+}
+
+void cs5530DataGet(void)
+{
+    CS5552_LegacyCs5530DataGet(&cs5530);
+}
+
+void cs5530ResetMonitor(void)
+{
+    CS5552_LegacyCs5530ResetMonitor(&cs5530);
+}
+
+void cs5530DataProcess(uint8_t channel)
+{
+    (void)channel;
+}
+
+void LED_disp(uint8_t led) {
+    HAL_GPIO_WritePin(P_LEDWK0_GPIO_Port, P_LEDWK0_Pin, (led & 0x01) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    HAL_GPIO_WritePin(P_LEDWK1_GPIO_Port, P_LEDWK1_Pin, (led & 0x02) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+}
+static uint32_t led_tick = 0;
+
+void LED_proc(void) {
+    if (HAL_GetTick() - led_tick < 200) {
+        return;
+    }
+    led_tick = HAL_GetTick();
+    HAL_GPIO_TogglePin(P_LEDWK0_GPIO_Port, P_LEDWK0_Pin);
+    HAL_GPIO_TogglePin(P_LEDWK1_GPIO_Port, P_LEDWK1_Pin);
+}
