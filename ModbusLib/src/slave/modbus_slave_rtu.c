@@ -1,6 +1,6 @@
 /*******************************************************************************
- *  Copyright (c) [scl]閵嗗倷绻氶悾娆愬閺堝娼堥崚鈺嬫嫹?
- *     閿燂拷?閺傚洣绮庢笟娑楅嚋娴滅尨鎷�?閿熸垝绡勯崪宀€鐖虹粚鏈靛▏閿燂拷?閿涘矉鎷�?閿熸枻鎷�?閿熺晫鏁ゆ禍搴℃櫌娑撴氨鏁ら柅鏃撴嫹?
+ *  Copyright (c) [scl]闁靛棗鍊风换姘舵偩濞嗘劕顣查柡鍫濐槹濞煎牓宕氶埡瀣?
+ *     闁跨噦鎷�?闁哄倸娲ｇ划搴㈢瑹濞戞鍤嬪ù婊呭皑閹凤拷?闁跨喐鍨濈弧鍕椽瀹€鈧悥铏圭矚閺堥潧鈻忛柨鐕傛嫹?闁挎稑鐭夐幏锟�?闁跨喐鏋婚幏锟�?闁跨喓鏅弫銈嗙鎼粹剝娅屽☉鎾存皑閺併倝鏌呴弮鎾村?
  ******************************************************************************/
 #include "modbus_slave.h"
 #include "in_out.h"
@@ -27,19 +27,19 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr);
 static inline uint16_t rtu_add_crc(uint8_t *ret_data, uint16_t len);
 
 void modbus_rtu_poll(uint8_t *data, uint16_t len) {
-    /*妤犲矁鐦夐弫鐗堝祦闂€鍨閿燂拷?閸氾缚绗夌亸蹇庣艾閺堚偓鐏忓繐鎶氶敓锟�?*/
+    /*濡ょ姴鐭侀惁澶愬极閻楀牆绁﹂梻鈧崹顔碱唺闁跨噦鎷�?闁告熬缂氱粭澶屼焊韫囧海鑹鹃柡鍫氬亾閻忓繐绻愰幎姘舵晸閿燂拷?*/
     sys_assert_void(len >= data_frame_min_len);
-    /*妤犲矁鐦夋禒搴㈡簚閸︽澘娼冮敓锟�?閸氾缚绔撮敓锟�?*/
+    /*濡ょ姴鐭侀惁澶嬬鎼淬垺绨氶柛锔芥緲濞煎啴鏁撻敓锟�?闁告熬缂氱粩鎾晸閿燂拷?*/
     sys_assert_void(data[0] == rtu_slave->slave_addr);
-    /*閺佺増宓乧rc閺嶏繝鐛�*/
+    /*闁轰胶澧楀畵涔c闁哄稄绻濋悰锟�*/
     sys_assert_void(modbus_crc_compute(data, len) == 0);
     data_parse(data, &packet);
-    /*閺佺増宓佹径鍕倞*/
-    uint16_t resp_len = 0;/*閸濆秴绨查弫鐗堝祦闂€鍨*/
-    uint8_t resp_code = rsp_nut_support_cmd;/*閸濆秴绨查敓锟�?*/
+    /*闁轰胶澧楀畵浣瑰緞閸曨厽鍊�*/
+    uint16_t resp_len = 0;/*闁告繂绉寸花鏌ュ极閻楀牆绁﹂梻鈧崹顔碱唺*/
+    uint8_t resp_code = rsp_nut_support_cmd;/*闁告繂绉寸花鏌ユ晸閿燂拷?*/
     switch (packet.func_code) {
-        case 0x3: /*鐠囪绻氶幐浣哥槑鐎涙ê娅�*/
-        case 0x4: /*鐠囨槒绶崗銉ョ槑鐎涙ê娅�*/
+        case 0x3: /*閻犲洩顔婄换姘跺箰娴ｅ摜妲戦悗娑櫭▍锟�*/
+        case 0x4: /*閻犲洦妲掔欢顓㈠礂閵夈儳妲戦悗娑櫭▍锟�*/
         {
             if (packet.func_code == 0x3) {
                 resp_code = mb_rtu_ret(rtu_slave->api.read_hold_reg != NULL,
@@ -59,8 +59,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             }
             break;
         }
-        case 0x1: /*鐠囪崵鍤庨崷鍫㈠Ц閿燂拷?*/
-        case 0x2: /*鐠囨槒绶崗銉уЦ閿燂拷?*/
+        case 0x1: /*閻犲洩宕甸崵搴ㄥ捶閸垹笑闁跨噦鎷�?*/
+        case 0x2: /*閻犲洦妲掔欢顓㈠礂閵壯冃﹂柨鐕傛嫹?*/
         {
             // if (packet.func_code == 0x1) {
             //     resp_code = mb_rtu_ret(rtu_slave->api.read_coil_state != NULL,
@@ -74,7 +74,7 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             // if (resp_code == rsp_ok) {
             //     cache_buf[resp_len++] = packet.slave_addr;
             //     cache_buf[resp_len++] = packet.func_code;
-            //     // 鏉╂柨娲栭惃鍕摟閼哄倹鏆�
+            //     // 閺夆晜鏌ㄥú鏍儍閸曨偆鎽熼柤鍝勫€归弳锟�
             //     if (packet.reg_num % 8 == 0) {
             //         cache_buf[resp_len++] = packet.reg_num / 8;
             //     } else {
@@ -84,8 +84,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             // }
         }
             break;
-        case 0x06:/*閸愭瑤绔撮敓锟�?鐎靛嫬鐡ㄩ敓锟�?*/
-        case 0x05:/*閸愭瑤绔撮敓锟�?缁惧灝婀€*/
+        case 0x06:/*闁告劖鐟ょ粩鎾晸閿燂拷?閻庨潧瀚悺銊╂晸閿燂拷?*/
+        case 0x05:/*闁告劖鐟ょ粩鎾晸閿燂拷?缂佹儳鐏濆﹢鈧�*/
         {
             if (packet.func_code == 0x05) {
                 resp_code = mb_rtu_ret(rtu_slave->api.write_one_coil != NULL,
@@ -101,8 +101,8 @@ void modbus_rtu_poll(uint8_t *data, uint16_t len) {
             }
             break;
         }
-        case 0x10:/*閸愭瑱鎷�?閿熸垝閲滅€靛嫬鐡ㄩ敓锟�?*/
-        case 0x0F:/*閸愭瑱鎷�?閿熸垝閲滅痪鍨箑*/
+        case 0x10:/*闁告劖鐟遍幏锟�?闁跨喐鍨濋柌婊呪偓闈涘閻°劑鏁撻敓锟�?*/
+        case 0x0F:/*闁告劖鐟遍幏锟�?闁跨喐鍨濋柌婊呯棯閸喗绠�*/
         {
             // if (packet.func_code == 0x0F) {
             //     un_pack_bool(cache_status_buf, packet.reg_num, packet.data, packet.data_len);
@@ -149,20 +149,20 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr) {
     ptr->reg_addr = cv_u8_to_16(data + idx);
     idx += 2;
     switch (ptr->func_code) {
-        case 0x3: /*鐠囪绻氶幐浣哥槑鐎涙ê娅�*/
-        case 0x4: /*鐠囨槒绶崗銉ョ槑鐎涙ê娅�*/
-        case 0x1: /*鐠囪崵鍤庨崷鍫㈠Ц閿燂拷?*/
-        case 0x2: /*鐠囨槒绶崗銉уЦ閿燂拷?*/
+        case 0x3: /*閻犲洩顔婄换姘跺箰娴ｅ摜妲戦悗娑櫭▍锟�*/
+        case 0x4: /*閻犲洦妲掔欢顓㈠礂閵夈儳妲戦悗娑櫭▍锟�*/
+        case 0x1: /*閻犲洩宕甸崵搴ㄥ捶閸垹笑闁跨噦鎷�?*/
+        case 0x2: /*閻犲洦妲掔欢顓㈠礂閵壯冃﹂柨鐕傛嫹?*/
             ptr->reg_num = cv_u8_to_16(data + idx);
             idx += 2;
             break;
-        case 0x06:/*閸愭瑤绔撮敓锟�?鐎靛嫬鐡ㄩ敓锟�?*/
-        case 0x05:/*閸愭瑤绔撮敓锟�?缁惧灝婀€*/
+        case 0x06:/*闁告劖鐟ょ粩鎾晸閿燂拷?閻庨潧瀚悺銊╂晸閿燂拷?*/
+        case 0x05:/*闁告劖鐟ょ粩鎾晸閿燂拷?缂佹儳鐏濆﹢鈧�*/
             ptr->data = data + idx;
             ptr->data_len = 2;
             break;
-        case 0x10:/*閸愭瑱鎷�?閿熸垝閲滅€靛嫬鐡ㄩ敓锟�?*/
-        case 0x0F:/*閸愭瑱鎷�?閿熸垝閲滅痪鍨箑*/
+        case 0x10:/*闁告劖鐟遍幏锟�?闁跨喐鍨濋柌婊呪偓闈涘閻°劑鏁撻敓锟�?*/
+        case 0x0F:/*闁告劖鐟遍幏锟�?闁跨喐鍨濋柌婊呯棯閸喗绠�*/
             ptr->reg_num = cv_u8_to_16(data + idx);
             idx += 2;
             ptr->data_len = data[idx++];
@@ -172,7 +172,7 @@ static inline void data_parse(uint8_t *data, mb_slave_parse_data_t *ptr) {
 }
 
 
-/***************************************************************閸忚渹缍嬬€圭偟骞�********************************************************/
+/***************************************************************闁稿繗娓圭紞瀣偓鍦仧楠烇拷********************************************************/
 uint16_t reg_start_addr = 0x000;
 
 regHoldreg_u holdreg={

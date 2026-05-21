@@ -6,7 +6,7 @@
 #include "task.h"
 #include <elog.h>
 #include "Eeprom_manage.h"
-#include "ADS1274.h"
+#include "adc_scale.h"
 
 static float multipointCalibrateFunc(const int32_t _code,const uint8_t _connector,const sensorData_t *_senData,float *_orig);
 static int32_t antiMultipointCalibrateFunc( const float _orig,const uint8_t _connector,const sensorData_t *_senData,int32_t *_code);

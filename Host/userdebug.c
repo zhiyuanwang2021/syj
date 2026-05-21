@@ -3,7 +3,6 @@
 #include "DO.h"
 #include "usart.h"
 #include "cmsis_os.h"
-#include "ADS1274.h"
 #include "Computer_vision.h"
 #include "control.h"
 #include "gParameter.h"

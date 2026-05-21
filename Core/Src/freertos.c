@@ -38,7 +38,6 @@
 #include "gParameter.h"
 #include "Encoder.h"
 #include "communicate.h"
-#include "ADS1274.h"
 #include "Eeprom_manage.h"
 #include "sensor.h"
 #include "td.h"
@@ -456,7 +455,6 @@ void WaveTask(void const * argument)
 {
   /* USER CODE BEGIN WaveTask */
 	//static char buffer[1024] = {0};
-	// float voltage=0;
   static uint32_t counter = 0;
   // static uint32_t counterInt = 0;
   /* Infinite loop */
@@ -563,9 +561,6 @@ void WaveTask(void const * argument)
     taskListPrint((char *)taskListBuffer);
   }
 #endif
-    // printf("buf[0]:0x%02X%02X%02X\r\n",ads1274_par.buf[0][1],ads1274_par.buf[0][2],ads1274_par.buf[0][3]);
-    // printf("force:%d,num:%d\r\n",ads1274_par.valueFilter[sensorCheck.MapNum[0]],sensorCheck.MapNum[0]);
-
 //#define DEBUG_CRASH_241011
 #ifdef DEBUG_CRASH_241011
     printf("%f,%f,%f,%f\r\n",svPWM.pos,pose.orig,force.filter,force.filterTrans);
@@ -608,17 +603,6 @@ void WaveTask(void const * argument)
     printf("%d,%d\r\n",SenData[ch4Load].sensorIntgr,SenData[ch0Pose].sensorIntgr);
 #endif
     //forceTareTestPrint();
-//#define ADC_PRINTF_DEBUG
-#ifdef ADC_PRINTF_DEBUG	
-	  voltage =ADC_VREF*ads1274_par.value[1]/(ADC_RESOLUTION-1.0f) /ADC_AMPLIFIER;
-	  printf("%f,%f,%d,%d,%f,%f,%d,%f,%f\n",force.filter,force.orig,force.code,ads1274_par.value[1],voltage,ls_slide_t.k,filterLen.loadLen,forceSL.filter,forceSL2.filter);
-//	printf("%d,%d,%d,%f,%f,%f\n",ads1274_par.value[0]
-//								,ads1274_par.value[1]
-//								,ads1274_par.value[2]
-//								,ads1274_par.value_calcu[0]
-//								,force.orig
-//								,ads1274_par.value_calcu[2]);
-#endif	
 	  osDelay(10);
   }
   /* USER CODE END WaveTask */

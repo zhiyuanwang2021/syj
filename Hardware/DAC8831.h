@@ -11,8 +11,8 @@
 #include "stm32h7xx_hal.h"
 #include "gpio.h"
 #include "spi.h"
-/***************----- W5500 GPIO定义 -----***************/
-#define DAC_CS		GPIO_PIN_12	//定义ADS1274的SYNC引脚	 
+/***************----- DAC GPIO定义 -----***************/
+#define DAC_CS		GPIO_PIN_12	// DAC8831 CS 引脚	 
 #define DAC_CS_PORT	GPIOB
 
 #define DAC_CS_RESET HAL_GPIO_WritePin(P_DAC_CS_GPIO_Port, P_DAC_CS_Pin, GPIO_PIN_RESET)

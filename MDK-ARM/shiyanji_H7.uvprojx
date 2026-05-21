@@ -681,11 +681,6 @@
               <FilePath>..\Hardware\RS485.c</FilePath>
             </File>
             <File>
-              <FileName>ADS1274.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Hardware\ADS1274.c</FilePath>
-            </File>
-            <File>
               <FileName>Computer_vision.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Hardware\Computer_vision.c</FilePath>

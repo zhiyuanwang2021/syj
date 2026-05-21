@@ -1,0 +1,7 @@
+#ifndef _ADC_SCALE_H_
+#define _ADC_SCALE_H_
+
+#define ADC_FACTOR_ROUND 1.2e-7f
+#define ADC_FACTOR_CS5530_ROUND 9.3132e-7f
+
+#endif

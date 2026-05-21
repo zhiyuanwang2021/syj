@@ -20,8 +20,9 @@ static void mobusSendFunction(uint8_t *in_data, uint16_t len){
     //HAL_UART_Transmit_DMA(&huart2,in_data,len);
 }
 
-static void modbusRevFunction(uint16_t *out_data_len){
-    return;
+static uint8_t *modbusRevFunction(uint16_t *out_data_len){
+    *out_data_len = 0;
+    return NULL;
 }
 
 /**

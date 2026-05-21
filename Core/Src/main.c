@@ -28,7 +28,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "RS485.h"
-#include "ADS1274.h"
 #include "DAC8831.h"
 #include "ETHw5500.h"
 #include "Servo_Driver.h"
@@ -103,7 +102,6 @@ void hardwareInit(void){
   modbusInit();
   RS485_init(&huart2);
   // ADC init
-	// ADS1274_Init();
   cs5530Init();
   //Eth fifo init
 	fifo_init(&rev_fifo);

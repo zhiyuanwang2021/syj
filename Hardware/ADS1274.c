@@ -11,7 +11,7 @@ void ADS1274_SYNC(void);
 ads1274_t ads1274_par;
 void ADS1274_Init()
 {
-	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);//Ä£ÄâADS_CLK¾§ÕñÐÅºÅ20MHz
+	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);//æ¨¡æ‹ŸADS_CLKæ™¶æŒ¯ä¿¡å·20MHz
 	ADS1274_Par_Init();
 	ADS1274_SYNC();
 
@@ -35,7 +35,7 @@ void ADS1274_SYNC(void)
 }
 
 
-//´ÓSPIx¶ÁADCÖµ
+//ä»ŽSPIxè¯»ADCå€¼
 void ADS1274_Read_Data(ads1274_t *par,SPI_HandleTypeDef *_hspix)
 {
 	uint8_t *p = &par->buf[0][0];	
@@ -46,7 +46,7 @@ void ADS1274_Data_Process(ads1274_t *par)
 {
 	uint8_t (*p)[3] = par->buf;	
 	uint8_t i=0;
-	for(i=0;i<par->channelNum;i++)//Êý¾ÝÖØ×é
+	for(i=0;i<par->channelNum;i++)//æ•°æ®é‡ç»„
 	{
 		// if( (p[i][0]&0x80) == 0x00)
 		// par->valueFilter[i] = *(int32_t*)p[i];

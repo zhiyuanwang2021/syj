@@ -7,7 +7,6 @@
 #include "communicate.h"
 #include "Encoder.h"
 #include "tim.h"
-#include "ADS1274.h"
 #include "lsm.h"
 #include "in_out.h"
 #include "pid.h"
