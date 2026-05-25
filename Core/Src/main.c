@@ -101,7 +101,7 @@ void hardwareInit(void){
   modbusInit();
   RS485_init(&huart2);
   // ADC init
-  cs5530Init();
+  CS5552_LegacyCs5530Init(&cs5530);
   //Eth fifo init
 	fifo_init(&rev_fifo);
   //Encoder init

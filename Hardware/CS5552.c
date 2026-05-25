@@ -738,16 +738,6 @@ void cs5530MultiCollect(uint8_t channel)
     (void)channel;
 }
 
-void cs5530Init(void)
-{
-    CS5552_LegacyCs5530Init(&cs5530);
-}
-
-void cs5530DataGet(void)
-{
-    CS5552_LegacyCs5530DataGet(&cs5530);
-}
-
 void cs5530ResetMonitor(void)
 {
     CS5552_LegacyCs5530ResetMonitor(&cs5530);

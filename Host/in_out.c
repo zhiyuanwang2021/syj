@@ -97,7 +97,7 @@ void inputGetValue()
 	// AI 鍦ㄥ閮ㄤ腑鏂腑鑾峰彇
 	extern uint16_t time13Count;
 	__HAL_TIM_SetCounter(&htim13, 0);
-	cs5530DataGet();
+	CS5552_LegacyCs5530DataGet(&cs5530);
 	time13Count = __HAL_TIM_GetCounter(&htim13);
 	// DI
 	DIDetect_ReadALL();
@@ -231,6 +231,7 @@ void MD_CODE_map(uint8_t SensorMapNum[3])
 	else
 		force.code = cs5530.Code[cs5530Channel2] - AL.tare.value[ch4Load];
 
+		
 	/*
 	 * Current CS5552 migration does not use chip0.ch0,
 	 * so strain1 is intentionally kept at zero for now.

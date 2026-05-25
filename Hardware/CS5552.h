@@ -224,8 +224,6 @@ void adc_Write_Offset_Register(long int r_Value);
 void adc_Initl(void);
 signed long int adc_Read_Data_Register(void);
 void cs5530MultiCollect(uint8_t channel);
-void cs5530Init(void);
-void cs5530DataGet(void);
 void cs5530ResetMonitor(void);
 void CS5552_Delay_Init(void);
 void CS5552_Delay_ms(uint32_t ms);
