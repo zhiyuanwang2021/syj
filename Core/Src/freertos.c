@@ -568,8 +568,8 @@ void WaveTask(void const * argument)
 
 #define DEBUG_LOAD_SENSOR
 #ifdef DEBUG_LOAD_SENSOR
-    printf("%d,%f,%f,%f,%f,%d,%f,%f,%f,%d,%d\r\n",force.code,force.orig,force.filter,forceLsm.filter,force.filterTrans,AL.tare.value[ch4Load],AL.tare.fValue[ch4Load],
-                        AL.loadCtrl.NominalSensitive,AL.loadCtrl.NominalValue,filterLen.loadLen,SenData[ch4Load].sensorIntgr);
+    // printf("%d,%f,%f,%f,%f,%d,%f,%f,%f,%d,%d\r\n",force.code,force.orig,force.filter,forceLsm.filter,force.filterTrans,AL.tare.value[ch4Load],AL.tare.fValue[ch4Load],
+    //                     AL.loadCtrl.NominalSensitive,AL.loadCtrl.NominalValue,filterLen.loadLen,SenData[ch4Load].sensorIntgr);
 #endif
 
 //#define DEBUG_TEST

@@ -44,6 +44,9 @@ void CS5552_CS_HIGH(void) {
 }
 
 void CS5552_Delay_Init(void) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0U;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
     s_us_ticks = SystemCoreClock / 1000000U;
 }
 
@@ -473,6 +476,7 @@ bool CS5552_CompatDualInit(void) {
 
 void CS5552_CompatInit(cs5552_compat_t *compat_ctx)
 {
+    printf("CS5552 Compatibility Init...\r\n");
     if (compat_ctx == NULL) {
         return;
     }
@@ -483,6 +487,7 @@ void CS5552_CompatInit(cs5552_compat_t *compat_ctx)
 
     cs5552_ready = CS5552_CompatDualInit();
     compat_ctx->runState = cs5552_ready ? cs5530RunNormal : cs5530RunAbnormal;
+    printf("CS5552 Compatibility Init %s\r\n", cs5552_ready ? "Success" : "Failed");
 }
 
 void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
@@ -513,7 +518,7 @@ void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
             compat_ctx->Voltage[cs5530Channel2] = voltage;
             compat_ctx->Value[cs5530Channel2] = voltage;
             compat_ctx->csChannel = cs5530Channel3;
-            printf("cs5552CompatForce value=%f\r\n", compat_ctx->Value[cs5530Channel2]);
+            // printf("cs5552CompatForce value=%f\r\n", compat_ctx->Value[cs5530Channel2]);
         }
         break;
 
@@ -523,7 +528,7 @@ void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
             compat_ctx->Voltage[cs5530Channel3] = voltage;
             compat_ctx->Value[cs5530Channel3] = voltage;
             compat_ctx->csChannel = cs5530Channel1;
-            printf("cs5552CompatStrain2 value=%f\r\n", compat_ctx->Value[cs5530Channel3]);
+            // printf("cs5552CompatStrain2 value=%f\r\n", compat_ctx->Value[cs5530Channel3]);
         }
         break;
 

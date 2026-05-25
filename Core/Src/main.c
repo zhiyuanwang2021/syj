@@ -300,7 +300,45 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  (void)GPIO_Pin;
+  // static uint32_t i = 0;
+  // uint16_t time13Count = 0;
+  // if(GPIO_Pin == P_ADCMISO_Pin)
+	// {
+  //   __HAL_TIM_SetCounter(&htim13,0);
+	// 	//  //disable interrupt,the corresponding interrupt needs to be disabled
+	// 	 HAL_NVIC_DisableIRQ(P_ADCMISO_EXTI_IRQn);
+	// 	cs5530MultiCollect(cs5530.csChannel);
+  //   if(++cs5530.csChannel >= cs5530ChannelNumMax)	
+  //     cs5530.csChannel = cs5530Channel1;
+  //   switch (cs5530.csChannel)
+  //   {
+  //   case cs5530Channel1:
+  //     CS3_SET;
+  //     CS2_SET;
+  //     CS1_RESET;
+  //     break;
+  //   case cs5530Channel2:
+  //     CS1_SET;
+  //     CS3_SET;
+  //     // CS2_RESET;
+  //     break;
+  //   case cs5530Channel3:
+  //     CS2_SET;
+  //     CS1_SET;
+  //     // CS3_RESET;
+  //     break;
+  //   default:
+  //     break;
+  //   }
+  //   time13Count = __HAL_TIM_GetCounter(&htim13);
+  //   // if(cs5530.csChannel == cs5530Channel3){
+  //   //   printf("%d,%d,%d,%f,%f,%f\r\n",cs5530.Code[cs5530Channel1],cs5530.Code[cs5530Channel2],cs5530.Code[cs5530Channel3],
+  //   //                               cs5530.Voltage[cs5530Channel1],cs5530.Voltage[cs5530Channel2],cs5530.Voltage[cs5530Channel3]);
+  //   // }
+  //   //printf("exit 14:%d,channel:%d,time:%d\r\n",++i,cs5530.csChannel,time13Count);
+	// 	//enable interrupt
+	// 	 HAL_NVIC_EnableIRQ(P_ADCMISO_EXTI_IRQn);	
+	// }
 }
  uint16_t tim6us=0;
 

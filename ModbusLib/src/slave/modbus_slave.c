@@ -53,7 +53,7 @@ static void modbus_slave_init(modbus_slave_t *slave) {
         // extern void modbus_slave_tcp_init(modbus_slave_t *slave, uint8_t *in_cache_buf, bool *in_status_cache);
         // modbus_slave_tcp_init(slave, data_buf_cache, status_buf_cache);
     } else if (slave->trans_mode == rtu_mode) {
-        printf("debug:modbus slave mode is rtu mode");
+        // printf("debug:modbus slave mode is rtu mode");
         extern void modbus_slave_rtu_init(modbus_slave_t *slave, uint8_t *in_cache_buf, bool *in_status_cache);
         modbus_slave_rtu_init(slave, data_buf_cache, status_buf_cache);
     }
