@@ -2151,7 +2151,7 @@ void RDSENSORDATA_Process(void)//璇诲彇浼犳劅鍣ㄦ暟鎹?
 			Variable_Type_Conversion(INT32_TYPE,*(uint32_t*)(&SenData[sensorConnector].LinV[j].ADCCode),buf_com,&i);//DataTransmitPeriod
 			Variable_Type_Conversion(FLOAT_TYPE,*(uint32_t*)(&SenData[sensorConnector].LinV[j].RefValue),buf_com,&i);//DataTransmitPeriod
 			if(sensorConnector != ch0Pose){
-				sensorCorrectionFactorTemp = 1/SenData[sensorConnector].LinV[j].CorrectionFactor * ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalValue;
+				sensorCorrectionFactorTemp = 1/SenData[sensorConnector].LinV[j].CorrectionFactor * ADC_FACTOR_SENSOR_FRONTEND_ROUND * SenData[sensorConnector].NominalValue;
 				if(sensorConnector == ch4Load)
 					sensorCorrectionFactorTemp *= 1000.0f;
 			}

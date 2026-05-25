@@ -12,7 +12,7 @@
 #include "string.h"
 #include "stdbool.h"
 
-/* Legacy CS5530 compatibility definitions moved from CS553X.h */
+/* Compatibility definitions retained for the current CS5552-backed 3-slot sampling path. */
 #define CMD_NULL            0x00
 #define CMD_SYNC0           0xFE
 #define CMD_SYNC1           0xFF
@@ -66,6 +66,22 @@ typedef struct{
 }cs5530_t;
 
 extern cs5530_t cs5530;
+
+/* Neutral compatibility aliases for the current CS5552-backed 3-slot sampling path. */
+typedef cs5530Channel_e cs5552_compat_channel_e;
+typedef cs5530RunState_e cs5552_compat_run_state_e;
+typedef cs5530_t cs5552_compat_t;
+
+#define CS5552_COMPAT_CHANNEL_UNUSED      cs5530Channel1
+#define CS5552_COMPAT_CHANNEL_FORCE       cs5530Channel2
+#define CS5552_COMPAT_CHANNEL_STRAIN2     cs5530Channel3
+#define CS5552_COMPAT_CHANNEL_COUNT       cs5530ChannelNumMax
+
+#define CS5552_COMPAT_STATE_NO_START      cs5530NoStart
+#define CS5552_COMPAT_STATE_RUN_NORMAL    cs5530RunNormal
+#define CS5552_COMPAT_STATE_RUN_ABNORMAL  cs5530RunAbnormal
+
+#define cs5552_compat_ctx                 cs5530
 #define CS5552_HSPI  (&hspi3)
 
 /* 多芯片片选索引 */
@@ -210,21 +226,10 @@ void CS5552_CS_HIGH(void);
 
 extern uint32_t raw;
 extern bool cs5552_ready;
-bool CS5552_LegacyDualInit(void);
+bool CS5552_CompatDualInit(void);
 bool CS5552_ReadChipContDataNonBlocking(uint8_t chip, uint8_t pga_gain, int32_t *out_data, float *out_voltage);
-void CS5552_LegacyCs5530Init(cs5530_t *cs5530_ctx);
-void CS5552_LegacyCs5530DataGet(cs5530_t *cs5530_ctx);
-void CS5552_LegacyCs5530ResetMonitor(cs5530_t *cs5530_ctx);
-void adc_sw_Reset(void);
-void adc_Write_CFG_Register(unsigned char nVREF,unsigned char nFRS,unsigned char nWRX,unsigned char nUB);
-void adc_Read_CFG_Register(void);
-void adc_Write_Gain_Register(long int g_Value);
-void adc_Read_Gain_Register(void);
-void adc_Write_Offset_Register(long int r_Value);
-void adc_Initl(void);
-signed long int adc_Read_Data_Register(void);
-void cs5530MultiCollect(uint8_t channel);
-void cs5530ResetMonitor(void);
+void CS5552_CompatInit(cs5552_compat_t *compat_ctx);
+void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx);
 void CS5552_Delay_Init(void);
 void CS5552_Delay_ms(uint32_t ms);
 void CS5552_Delay_us(uint32_t us);
@@ -240,17 +245,8 @@ bool CS5552_ReadADC_Single(uint8_t conv_conf_idx, int32_t *out_data);
 bool CS5552_Offset_SelfCalibration(uint8_t conv_conf_idx);
 
 bool CS5552_StartContConv(uint8_t conv_conf_idx);
-bool CS5552_StartSingleConv(uint8_t conv_conf_idx);
-bool CS5552_ReadADC(int32_t *out_data);
-bool CS5552_ReadContData(int32_t *out_data);
-bool CS5552_SingleChannelRead(uint8_t conv_conf_idx, int32_t *out_data, uint8_t *out_channel);
-bool CS5552_ParseConvData(uint32_t raw_data, uint8_t expected_channel, int32_t *out_data, uint8_t *out_channel);
 
 float CS5552_ConvertToVoltage(int32_t raw_code, uint8_t pga_gain);
-
-void LED_disp(uint8_t led);
-void LED_proc(void);
-void ADC_proc(void);
 
 #endif
 

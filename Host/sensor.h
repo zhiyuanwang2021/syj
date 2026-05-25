@@ -56,10 +56,10 @@ typedef struct{
 }sensorCalibrate_t;
 extern sensorCalibrate_t sensorCalibrate;
 
-float pose_calibrate_process(void);//位移标定
-float load_calibrate_process(void);//载荷标定
-float ext1_calibrate_process(void);//应变1标定
-float ext2_calibrate_process(void);//应变2标定
+float pose_calibrate_process(void);//浣嶇Щ鏍囧畾
+float load_calibrate_process(void);//杞借嵎鏍囧畾
+float ext1_calibrate_process(void);//搴斿彉1鏍囧畾
+float ext2_calibrate_process(void);//搴斿彉2鏍囧畾
 
 void sensorCalibrateFuncInit(void);
 void sensorZeroCodeInit(void);

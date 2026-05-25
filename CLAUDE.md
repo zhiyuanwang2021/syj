@@ -23,7 +23,7 @@ No CLI build scripts exist. To build, open the `.uvprojx` in Keil and rebuild. W
 | Layer | Directory | Role |
 |-------|-----------|------|
 | Application / Business | `Host/` | Control loop, protocol dispatch, sampling & calibration, global params, sensor mgmt, MRAM/EEPROM persistence |
-| Algorithms | `PID/`, `ADRC/`, `Regression/`, `CS5530/` | Control and system identification |
+| Algorithms | `PID/`, `ADRC/`, `Regression/` | Control and system identification |
 | Board / Hardware | `Hardware/` | DI/DO, RS485, encoder, MRAM, servo driver, DAC (DAC8831), ADC legacy driver/code and current acquisition support |
 | Network transport | `Ethenet/` | W5500 Ethernet driver (note: directory is `Ethenet`, not `Ethernet`) |
 | Protocol stacks | `Internet/`, `ModbusLib/` | MQTT, SNMP, HTTP, FTP, DHCP, DNS, SNTP, TFTP, Modbus |
@@ -36,7 +36,7 @@ No CLI build scripts exist. To build, open the `.uvprojx` in Keil and rebuild. W
 
 ### Primary data flow
 
-Sensors / ADC front-end → `Hardware/` and `CS5530/` drivers → `Host/in_out.c` (sampling, unit conversion) → `Host/control.c` (closed-loop PID/ADRC, trajectory generation in `posGenerator.c`, path planning in `trackplaning.c`) → servo output via `Hardware/DAC8831.c` / `Hardware/Servo_driver.c`
+Sensors / ADC front-end → `Hardware/CS5552.c` and related board drivers → `Host/in_out.c` (sampling, unit conversion) → `Host/control.c` (closed-loop PID/ADRC, trajectory generation in `posGenerator.c`, path planning in `trackplaning.c`) → servo output via `Hardware/DAC8831.c` / `Hardware/Servo_driver.c`
 
 Host commands arrive via `Ethenet/ETHw5500.c` → `Host/communicate.c` (command dispatch per `EthProtocol.c`) → control state changes or parameter reads
 

@@ -705,8 +705,9 @@ void EepromTask(void const * argument)
     manualBoxTypeMonitor(&manualBox);
     mram_write_monitor(&mySemaphore.mram);
     eeprom_write_monitor(&mySemaphore.eeprom);
-    // Legacy CS5530 reset monitor disabled during CS5552 migration.
-    // cs5530ResetMonitor();
+    // CS5552 compatibility recovery hook is currently disabled here.
+  // CS5552_CompatResetMonitor(&cs5552_compat_ctx);
+  
   
     osDelay(10);
   }

@@ -14,17 +14,18 @@ static GPIO_TypeDef* cs_ports[2];
 static SlidingAvgFilter voltage_filter_ch0;
 static SlidingAvgFilter voltage_filter_ch1;
 
-static void CS5552_LegacyCs5530ClearData(cs5530_t *cs5530_ctx) {
+/* Keep the legacy 3-slot buffer shape so upper layers can migrate incrementally. */
+static void CS5552_CompatClearData(cs5552_compat_t *compat_ctx) {
     uint8_t i;
 
-    if (cs5530_ctx == NULL) {
+    if (compat_ctx == NULL) {
         return;
     }
 
     for (i = 0; i < cs5530ChannelNumMax; i++) {
-        cs5530_ctx->Code[i] = 0;
-        cs5530_ctx->Voltage[i] = 0.0f;
-        cs5530_ctx->Value[i] = 0.0f;
+        compat_ctx->Code[i] = 0;
+        compat_ctx->Voltage[i] = 0.0f;
+        compat_ctx->Value[i] = 0.0f;
     }
 }
 
@@ -369,182 +370,55 @@ bool CS5552_StartContConv(uint8_t conv_conf_idx) {
 }
 
 /**
- * @brief  CSHIGH_MODE 下的连续转换数据读取
- * @param  out_data 输出有符号 ADC 码值
- * @retval true 成功, false 超时或 SPI 错误
- * @note   时序：CS↓ → 等 SDO↓(数据就绪) → 读 32-bit → CS↑(释放总线)
- *         前置条件：SYS_CONF0 CSHIGH_MODE=1, CKS_EN=0, 已 StartContConv
- *         CS 高期间 SPI 总线可复用于其他芯片
+ * @brief  Poll one CS5552 chip for a fresh continuous-conversion sample
+ * @param  chip        Selected chip index
+ * @param  pga_gain    Gain used for voltage conversion
+ * @param  out_data    Output signed ADC code
+ * @param  out_voltage Output filtered voltage value
+ * @retval true Sample accepted, false no fresh/valid sample
  */
-bool CS5552_ReadContData(int32_t *out_data) {
-    if (out_data == NULL) {
-        return false;
-    }
-
-    /* 1. 拉低 CS，选中芯片 */
-    CS5552_CS_LOW();
-
-    /* 2. 等待 SDO 拉低（转换数据就绪） */
-    if (!CS5552_WaitSDO_Low(CS5552_SDO_TIMEOUT_MS)) {
-        CS5552_CS_HIGH();
-        return false;
-    }
-
-    /* 3. 读取 32-bit 数据帧 */
-    if (!CS5552_ReadADC(out_data)) {
-        CS5552_CS_HIGH();
-        return false;
-    }
-
-    /* 4. 拉高 CS，释放 SPI 总线供其他芯片使用 */
-    CS5552_CS_HIGH();
-    return true;
-}
-
-/**
- * @brief  启动单次转换（时序与 CS5552_StartContConv 完全一致）
- * @param  conv_conf_idx 转换配置索引
- * @retval true 成功, false 失败
- * @note   CS↓ → delay 10us → 发 SINGLE_CONV 命令 → delay 20us → 返回（CS 保持低）
- *         返回后需等 SDO↓ 再读数据，读完需 CS↑
- */
-bool CS5552_StartSingleConv(uint8_t conv_conf_idx) {
-    if (conv_conf_idx > 0x03) {
-        return false;
-    }
-    uint8_t cmd = (1u << 7) | ((conv_conf_idx & 0x03u) << 4) | (CMD_MOD_SINGLE_CONV << 1);
-    cmd = CS5552_CalcParity(cmd);
-    CS5552_CS_LOW();
-    CS5552_Delay_us(10);
-    if (!SPI_SendByte(cmd)) {
-        CS5552_CS_HIGH();
-        return false;
-    }
-    CS5552_Delay_us(20);
-    return true;
-}
-
-bool CS5552_ReadADC(int32_t *out_data) {
-    if (out_data == NULL) {
-        return false;
-    }
-
-    uint8_t txBuf[5] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    uint8_t rxBuf[5] = {0};
-    HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(CS5552_HSPI, txBuf, rxBuf, 5, CS5552_SPI_TIMEOUT_MS);
-    if (status != HAL_OK) {
-        printf("ADC: SPI read failed, status=%d\r\n", (int)status);
-        return false;
-    }
-    uint32_t raw_data = ((uint32_t)rxBuf[1] << 24) |
-                        ((uint32_t)rxBuf[2] << 16) |
-                        ((uint32_t)rxBuf[3] << 8)  |
-                        ((uint32_t)rxBuf[4]);
-    int32_t signed_data = (int32_t)(raw_data & 0xFFFFFFFEu);
-    signed_data >>= 1;
-    *out_data = signed_data;
-    return true;
-}
-
-/**
- * @brief  解析并校验 CONV_DATA 寄存器原始值
- * @param  raw_data         CONV_DATA 寄存器 32-bit 原始值
- * @param  expected_channel 期望通道 (0=CH0, 1=CH1, 其他=不校验通道)
- * @param  out_data         输出有符号 31-bit ADC 码值 (bit[31:1] 经掩码移位)
- * @param  out_channel      输出实际通道标识 (可选, 传 NULL 忽略)
- * @retval true 数据格式有效, false 校验失败
- * @note   数据格式参考 Table 5-11: bit[31:1]=ADC DATA, bit[0]=CHL
- *         满量程: 0x3FFFFFFF=+1.00, 0xC0000000=-1.00
- */
-bool CS5552_ParseConvData(uint32_t raw_data, uint8_t expected_channel,
-                          int32_t *out_data, uint8_t *out_channel) {
-    if (out_data == NULL) {
-        return false;
-    }
-
-    /* 提取 bit[0] 通道标识 */
-    uint8_t channel = (raw_data & CS5552_DATA_CHANNEL_BIT) ? 1 : 0;
-    if (out_channel != NULL) {
-        *out_channel = channel;
-    }
-
-    /* 校验通道匹配 */
-    if (expected_channel <= 1 && channel != expected_channel) {
-        printf("ADC Data: channel mismatch exp=%u got=%u raw=0x%08lX\r\n",
-               expected_channel, channel, (unsigned long)raw_data);
-        return false;
-    }
-
-    /* 掩码 bit[0] 后算术右移 1 位, 得到 31-bit 有符号值 */
-    int32_t signed_data = (int32_t)(raw_data & 0xFFFFFFFEu);
-    signed_data >>= 1;
-    *out_data = signed_data;
-
-    /* 校验数据范围: 不应超出满量程 */
-    if (signed_data > CS5552_DATA_MAX_VALID || signed_data < CS5552_DATA_MIN_VALID) {
-        printf("ADC Data: out of range val=%ld raw=0x%08lX\r\n",
-               (long)signed_data, (unsigned long)raw_data);
-        return false;
-    }
-
-    return true;
-}
-
-/**
- * @brief  单次转换模式读取单通道 ADC 数据
- * @param  conv_conf_idx 转换配置索引 (CS5552_CONFIG_IDX_CH0/CH1)
- * @param  out_data      输出有符号 ADC 码值
- * @param  out_channel   输出通道标识 (可为 NULL)
- * @retval true 成功, false 失败
- * @note   时序：StartSingleConv(CS↓→cmd→CS保持低) → 等 SDO↓ → 读数据 → CS↑
- *         数据帧格式与 CS5552_ReadADC 一致
- */
-bool CS5552_SingleChannelRead(uint8_t conv_conf_idx, int32_t *out_data, uint8_t *out_channel) {
-    if (out_data == NULL || conv_conf_idx > 0x03) {
-        return false;
-    }
-
-    /* 1. 启动单次转换（时序与 StartContConv 一致，CS 保持低） */
-    if (!CS5552_StartSingleConv(conv_conf_idx)) {
-        return false;
-    }
-
-    /* 2. 等待转换完成：SDO↓ 表示数据就绪 */
-    // uint32_t sdo_wait_start = HAL_GetTick();
-    if (!CS5552_WaitSDO_Low(CS5552_SDO_TIMEOUT_MS)) {
-        // printf("ADC: SDO timeout, waited=%lums\r\n",
-        //        (unsigned long)(HAL_GetTick() - sdo_wait_start));
-        CS5552_CS_HIGH();
-        return false;
-    }
-    // CS5552_Delay_ms(1);
-    // printf("SDO is %d\r\n", CS5552_SDO_READ() != GPIO_PIN_RESET);
-    return CS5552_ReadADC(out_data);   
-}
-
 bool CS5552_ReadChipContDataNonBlocking(uint8_t chip,
                                         uint8_t pga_gain,
                                         int32_t *out_data,
                                         float *out_voltage) {
+    uint32_t adc_raw = 0;
+    uint32_t top3;
+    int32_t adc_24bit;
+    float voltage_mv;
+    SlidingAvgFilter *filter_ctx;
+
     if (out_data == NULL || out_voltage == NULL) {
         return false;
     }
 
+    if (chip == CS5552_CHIP_0) {
+        filter_ctx = &voltage_filter_ch0;
+    } else if (chip == CS5552_CHIP_1) {
+        filter_ctx = &voltage_filter_ch1;
+    } else {
+        return false;
+    }
+
+    /* Poll-only read: return quickly if this chip has no fresh conversion yet. */
     CS5552_SelectChip(chip);
-    CS5552_CS_LOW();
 
-    if (CS5552_SDO_READ() != GPIO_PIN_RESET) {
-        CS5552_CS_HIGH();
+    if (!CS5552_ReadReg(REG_CONV_DATA, &adc_raw)) {
         return false;
     }
 
-    if (!CS5552_ReadADC(out_data)) {
-        CS5552_CS_HIGH();
+    top3 = (adc_raw >> 29) & 0x7u;
+    if (!(top3 == 0x2u || top3 == 0x3u || top3 == 0x4u || top3 == 0x5u ||
+          adc_raw == 0xFFFFFFFFu || adc_raw == 0xFFFFFFFEu || adc_raw == 0x0u)) {
         return false;
     }
 
-    CS5552_CS_HIGH();
-    *out_voltage = CS5552_ConvertToVoltage(*out_data, pga_gain);
+    /* Convert the packed conversion register into a signed 24-bit sample. */
+    adc_24bit = (int32_t)(adc_raw & 0xFFFFFFFEu) >> 7;
+    voltage_mv = CS5552_ConvertToVoltage(adc_24bit, pga_gain);
+
+    *out_data = adc_24bit;
+    /* A light moving average keeps the old sampling path stable during migration. */
+    *out_voltage = Filter_Update(filter_ctx, voltage_mv);
     return true;
 }
 float CS5552_ConvertToVoltage(int32_t raw_code, uint8_t pga_gain) {
@@ -557,12 +431,15 @@ float CS5552_ConvertToVoltage(int32_t raw_code, uint8_t pga_gain) {
 }
 
 
-bool CS5552_LegacyDualInit(void) {
+bool CS5552_CompatDualInit(void) {
     uint8_t chip0_ready = 0;
     uint8_t chip1_ready = 0;
 
     cs5552_ready = false;
 
+    /* The compatibility mapping is fixed for now:
+     * chip0.ch1 -> force, chip1.ch0 -> strain2, slot1 stays unused.
+     */
     CS5552_SelectChip(CS5552_CHIP_0);
     if (CS5552_Init()) {
         printf("CS5552-0 Init OK\r\n");
@@ -594,171 +471,65 @@ bool CS5552_LegacyDualInit(void) {
     return cs5552_ready;
 }
 
-void CS5552_LegacyCs5530Init(cs5530_t *cs5530_ctx)
+void CS5552_CompatInit(cs5552_compat_t *compat_ctx)
 {
-    if (cs5530_ctx == NULL) {
+    if (compat_ctx == NULL) {
         return;
     }
 
-    cs5530_ctx->runState = cs5530NoStart;
-    cs5530_ctx->csChannel = cs5530Channel1;
-    CS5552_LegacyCs5530ClearData(cs5530_ctx);
+    compat_ctx->runState = cs5530NoStart;
+    compat_ctx->csChannel = cs5530Channel1;
+    CS5552_CompatClearData(compat_ctx);
 
-    cs5552_ready = CS5552_LegacyDualInit();
-    cs5530_ctx->runState = cs5552_ready ? cs5530RunNormal : cs5530RunAbnormal;
+    cs5552_ready = CS5552_CompatDualInit();
+    compat_ctx->runState = cs5552_ready ? cs5530RunNormal : cs5530RunAbnormal;
 }
 
-void CS5552_LegacyCs5530DataGet(cs5530_t *cs5530_ctx)
+void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
 {
     int32_t code = 0;
     float voltage = 0.0f;
 
-    if (cs5530_ctx == NULL) {
+    if (compat_ctx == NULL) {
         return;
     }
 
-    if (!cs5552_ready || cs5530_ctx->runState != cs5530RunNormal) {
+    if (!cs5552_ready || compat_ctx->runState != cs5530RunNormal) {
         return;
     }
 
-    switch (cs5530_ctx->csChannel) {
+    /* Preserve the original round-robin order expected by the old control path. */
+    switch (compat_ctx->csChannel) {
     case cs5530Channel1:
-        cs5530_ctx->Code[cs5530Channel1] = 0;
-        cs5530_ctx->Voltage[cs5530Channel1] = 0.0f;
-        cs5530_ctx->Value[cs5530Channel1] = 0.0f;
-        cs5530_ctx->csChannel = cs5530Channel2;
+        compat_ctx->Code[cs5530Channel1] = 0;
+        compat_ctx->Voltage[cs5530Channel1] = 0.0f;
+        compat_ctx->Value[cs5530Channel1] = 0.0f;
+        compat_ctx->csChannel = cs5530Channel2;
         break;
 
     case cs5530Channel2:
         if (CS5552_ReadChipContDataNonBlocking(CS5552_CHIP_0, 128, &code, &voltage)) {
-            cs5530_ctx->Code[cs5530Channel2] = code;
-            cs5530_ctx->Voltage[cs5530Channel2] = voltage;
-            cs5530_ctx->Value[cs5530Channel2] = voltage;
-            cs5530_ctx->csChannel = cs5530Channel3;
+            compat_ctx->Code[cs5530Channel2] = code;
+            compat_ctx->Voltage[cs5530Channel2] = voltage;
+            compat_ctx->Value[cs5530Channel2] = voltage;
+            compat_ctx->csChannel = cs5530Channel3;
+            printf("cs5552CompatForce value=%f\r\n", compat_ctx->Value[cs5530Channel2]);
         }
         break;
 
     case cs5530Channel3:
         if (CS5552_ReadChipContDataNonBlocking(CS5552_CHIP_1, 128, &code, &voltage)) {
-            cs5530_ctx->Code[cs5530Channel3] = code;
-            cs5530_ctx->Voltage[cs5530Channel3] = voltage;
-            cs5530_ctx->Value[cs5530Channel3] = voltage;
-            cs5530_ctx->csChannel = cs5530Channel1;
+            compat_ctx->Code[cs5530Channel3] = code;
+            compat_ctx->Voltage[cs5530Channel3] = voltage;
+            compat_ctx->Value[cs5530Channel3] = voltage;
+            compat_ctx->csChannel = cs5530Channel1;
+            printf("cs5552CompatStrain2 value=%f\r\n", compat_ctx->Value[cs5530Channel3]);
         }
         break;
 
     default:
-        cs5530_ctx->csChannel = cs5530Channel1;
+        compat_ctx->csChannel = cs5530Channel1;
         break;
     }
 }
 
-void CS5552_LegacyCs5530ResetMonitor(cs5530_t *cs5530_ctx)
-{
-    static uint8_t abnormalCounter = 0;
-    static int32_t codeRecord[cs5530ChannelNumMax] = {0};
-
-    if (cs5530_ctx == NULL) {
-        return;
-    }
-
-    if (!cs5552_ready || cs5530_ctx->runState != cs5530RunNormal) {
-        codeRecord[cs5530Channel1] = cs5530_ctx->Code[cs5530Channel1];
-        codeRecord[cs5530Channel2] = cs5530_ctx->Code[cs5530Channel2];
-        codeRecord[cs5530Channel3] = cs5530_ctx->Code[cs5530Channel3];
-        abnormalCounter = 0;
-        return;
-    }
-
-    if ((cs5530_ctx->Code[cs5530Channel2] == codeRecord[cs5530Channel2]) &&
-        (cs5530_ctx->Code[cs5530Channel3] == codeRecord[cs5530Channel3])) {
-        abnormalCounter++;
-        if (abnormalCounter >= 100) {
-            cs5530_ctx->runState = cs5530RunAbnormal;
-            printf("CS5552 data monitor abnormal, reinit\r\n");
-            CS5552_LegacyCs5530Init(cs5530_ctx);
-            abnormalCounter = 0;
-        }
-    } else {
-        abnormalCounter = 0;
-    }
-
-    codeRecord[cs5530Channel1] = cs5530_ctx->Code[cs5530Channel1];
-    codeRecord[cs5530Channel2] = cs5530_ctx->Code[cs5530Channel2];
-    codeRecord[cs5530Channel3] = cs5530_ctx->Code[cs5530Channel3];
-}
-
-void adc_sw_Reset(void)
-{
-    /* Legacy CS5530 software reset is retired after CS5552 migration. */
-}
-
-void adc_Write_CFG_Register(unsigned char nVREF,
-                            unsigned char nFRS,
-                            unsigned char nWRX,
-                            unsigned char nUB)
-{
-    (void)nVREF;
-    (void)nFRS;
-    (void)nWRX;
-    (void)nUB;
-}
-
-void adc_Read_CFG_Register(void)
-{
-}
-
-void adc_Write_Gain_Register(long int g_Value)
-{
-    (void)g_Value;
-}
-
-void adc_Read_Gain_Register(void)
-{
-}
-
-void adc_Write_Offset_Register(long int r_Value)
-{
-    (void)r_Value;
-}
-
-void adc_Initl(void)
-{
-    cs5530.csChannel = cs5530Channel1;
-    CS5552_LegacyCs5530Init(&cs5530);
-}
-
-signed long int adc_Read_Data_Register(void)
-{
-    return 0;
-}
-
-void cs5530MultiCollect(uint8_t channel)
-{
-    (void)channel;
-}
-
-void cs5530ResetMonitor(void)
-{
-    CS5552_LegacyCs5530ResetMonitor(&cs5530);
-}
-
-void cs5530DataProcess(uint8_t channel)
-{
-    (void)channel;
-}
-
-void LED_disp(uint8_t led) {
-    HAL_GPIO_WritePin(P_LEDWK0_GPIO_Port, P_LEDWK0_Pin, (led & 0x01) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-    HAL_GPIO_WritePin(P_LEDWK1_GPIO_Port, P_LEDWK1_Pin, (led & 0x02) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-}
-static uint32_t led_tick = 0;
-
-void LED_proc(void) {
-    if (HAL_GetTick() - led_tick < 200) {
-        return;
-    }
-    led_tick = HAL_GetTick();
-    HAL_GPIO_TogglePin(P_LEDWK0_GPIO_Port, P_LEDWK0_Pin);
-    HAL_GPIO_TogglePin(P_LEDWK1_GPIO_Port, P_LEDWK1_Pin);
-}

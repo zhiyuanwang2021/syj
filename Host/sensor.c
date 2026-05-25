@@ -175,7 +175,7 @@ void sendata_update(void)
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
 					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
-												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalValue;	
+												* ADC_FACTOR_SENSOR_FRONTEND_ROUND * SenData[sensorConnector].NominalValue;	
 					//printf("Num:%d Temp:%f\r\n",j,SenData[sensorConnector].LinV[j].CorrectionFactor);												
 				}
 				sensorCalibrate.multipointZeroCodeUpdate(ch2Ext1,&SenData[ch2Ext1],&sensorCalibrate.zeroCode[ch2Ext1]);
@@ -196,7 +196,7 @@ void sendata_update(void)
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
 					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
-												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalSensitive;													
+												* ADC_FACTOR_SENSOR_FRONTEND_ROUND * SenData[sensorConnector].NominalSensitive;													
 				}
 				sensorCalibrate.multipointZeroCodeUpdate(ch3Ext2,&SenData[ch3Ext2],&sensorCalibrate.zeroCode[ch3Ext2]);
 			}else{
@@ -215,7 +215,7 @@ void sendata_update(void)
 				for(;j<SenData[sensorConnector].LinPoint;j++)
 				{
 					SenData[sensorConnector].LinV[j].CorrectionFactor = 1.0f / SenData[sensorConnector].LinV[j].CorrectionFactor
-												* ADC_FACTOR_CS5530_ROUND * SenData[sensorConnector].NominalValue * 1000.0f;	
+												* ADC_FACTOR_SENSOR_FRONTEND_ROUND * SenData[sensorConnector].NominalValue * 1000.0f;	
 					//printf("Num:%d Temp:%f\r\n",j,SenData[sensorConnector].LinV[j].CorrectionFactor);						
 				}
 				sensorCalibrate.multipointZeroCodeUpdate(ch4Load,&SenData[ch4Load],&sensorCalibrate.zeroCode[ch4Load]);
@@ -822,17 +822,17 @@ static float singlepointCalibrateFunc(  const int32_t _code,
 		*_orig = 7777;
 		break;
 	case ch2Ext1:
-		strain1.origTare = AL.ext1Ctrl.sign * (ADC_FACTOR_CS5530_ROUND * _code
+		strain1.origTare = AL.ext1Ctrl.sign * (ADC_FACTOR_SENSOR_FRONTEND_ROUND * _code
 				/ AL.ext1Ctrl.NominalSensitive * AL.ext1Ctrl.NominalValue);
 		*_orig = strain1.origTare - AL.tare.fValue[ch2Ext1];
 		break;
 	case ch3Ext2:
-		strain2.origTare = AL.ext2Ctrl.sign * (ADC_FACTOR_CS5530_ROUND * _code
+		strain2.origTare = AL.ext2Ctrl.sign * (ADC_FACTOR_SENSOR_FRONTEND_ROUND * _code
 				/ AL.ext2Ctrl.NominalSensitive * AL.ext2Ctrl.NominalValue);
 		*_orig = strain2.origTare - AL.tare.fValue[ch3Ext2];
 		break;
 	case ch4Load:
-		force.origTare = AL.loadCtrl.sign * ((ADC_FACTOR_CS5530_ROUND * 1000.0f)  * _code
+		force.origTare = AL.loadCtrl.sign * ((ADC_FACTOR_SENSOR_FRONTEND_ROUND * 1000.0f)  * _code
 				/ AL.loadCtrl.NominalSensitive * AL.loadCtrl.NominalValue);
 		*_orig = force.origTare - AL.tare.fValue[ch4Load];
 		break;
@@ -869,13 +869,13 @@ static int32_t antiSinglepointCalibrateFunc(const float _orig,
 		*_code = 0x7777;
 		break;
 	case ch2Ext1:
-		*_code = (int32_t)((_orig + AL.tare.fValue[ch2Ext1]) * AL.ext1Ctrl.NominalSensitive * AL.ext1Ctrl.sign / AL.ext1Ctrl.NominalValue * 1.0f / ADC_FACTOR_CS5530_ROUND);
+		*_code = (int32_t)((_orig + AL.tare.fValue[ch2Ext1]) * AL.ext1Ctrl.NominalSensitive * AL.ext1Ctrl.sign / AL.ext1Ctrl.NominalValue * 1.0f / ADC_FACTOR_SENSOR_FRONTEND_ROUND);
 		break;
 	case ch3Ext2:
-		*_code = (int32_t)((_orig + AL.tare.fValue[ch3Ext2]) * AL.ext2Ctrl.NominalSensitive * AL.ext2Ctrl.sign / AL.ext2Ctrl.NominalValue * 1.0f / ADC_FACTOR_CS5530_ROUND);
+		*_code = (int32_t)((_orig + AL.tare.fValue[ch3Ext2]) * AL.ext2Ctrl.NominalSensitive * AL.ext2Ctrl.sign / AL.ext2Ctrl.NominalValue * 1.0f / ADC_FACTOR_SENSOR_FRONTEND_ROUND);
 		break;
 	case ch4Load:
-		*_code = (int32_t)((_orig + AL.tare.fValue[ch4Load]) * AL.loadCtrl.NominalSensitive * AL.loadCtrl.sign / AL.loadCtrl.NominalValue * 1.0f / (ADC_FACTOR_CS5530_ROUND * 1000.0f));
+		*_code = (int32_t)((_orig + AL.tare.fValue[ch4Load]) * AL.loadCtrl.NominalSensitive * AL.loadCtrl.sign / AL.loadCtrl.NominalValue * 1.0f / (ADC_FACTOR_SENSOR_FRONTEND_ROUND * 1000.0f));
 		break;
 	default:
 		break;
