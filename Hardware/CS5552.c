@@ -11,8 +11,8 @@ cs5530_t cs5530;
 /* 多芯片片选管理 */
 static uint8_t  cs5552_chip = 0;
 static GPIO_TypeDef* cs_ports[2];
-static SlidingAvgFilter voltage_filter_ch0;
-static SlidingAvgFilter voltage_filter_ch1;
+static SlidingAvgFilterInt32 code_filter_ch0;
+static SlidingAvgFilterInt32 code_filter_ch1;
 
 /* Keep the legacy 3-slot buffer shape so upper layers can migrate incrementally. */
 static void CS5552_CompatClearData(cs5552_compat_t *compat_ctx) {
@@ -192,12 +192,12 @@ static bool CS5552_ConfigChannel(uint8_t channel) {
         reg_os    = REG_OS_CH0;
         reg_gain  = REG_GAIN_CH0;
         reg_conv  = REG_CONV_CONF0;
-        conv_conf = CONV_CONF_CHN_CH0 | CONV_CONF_DR_800HZ | CONV_CONF_GA_128X; /* 0x000000C1 */
+        conv_conf = CONV_CONF_CHN_CH0 | CONV_CONF_DR_12_5HZ | CONV_CONF_GA_128X; /* 0x000000C1 */
     } else if (channel == 1) {
         reg_os    = REG_OS_CH1;
         reg_gain  = REG_GAIN_CH1;
         reg_conv  = REG_CONV_CONF1;
-        conv_conf = CONV_CONF_CHN_CH1 | CONV_CONF_DR_800HZ | CONV_CONF_GA_128X; /* 0x000010C1 */
+        conv_conf = CONV_CONF_CHN_CH1 | CONV_CONF_DR_12_5HZ | CONV_CONF_GA_128X; /* 0x000010C1 */
     } else {
         return false;
     }
@@ -387,17 +387,18 @@ bool CS5552_ReadChipContDataNonBlocking(uint8_t chip,
     uint32_t adc_raw = 0;
     uint32_t top3;
     int32_t adc_24bit;
+    int32_t adc_24bit_filtered;
     float voltage_mv;
-    SlidingAvgFilter *filter_ctx;
+    SlidingAvgFilterInt32 *filter_ctx;
 
     if (out_data == NULL || out_voltage == NULL) {
         return false;
     }
 
     if (chip == CS5552_CHIP_0) {
-        filter_ctx = &voltage_filter_ch0;
+        filter_ctx = &code_filter_ch0;
     } else if (chip == CS5552_CHIP_1) {
-        filter_ctx = &voltage_filter_ch1;
+        filter_ctx = &code_filter_ch1;
     } else {
         return false;
     }
@@ -406,22 +407,27 @@ bool CS5552_ReadChipContDataNonBlocking(uint8_t chip,
     CS5552_SelectChip(chip);
 
     if (!CS5552_ReadReg(REG_CONV_DATA, &adc_raw)) {
+        printf("CS5552 chip%u read REG_CONV_DATA failed\r\n", chip);
         return false;
     }
 
     top3 = (adc_raw >> 29) & 0x7u;
-    if (!(top3 == 0x2u || top3 == 0x3u || top3 == 0x4u || top3 == 0x5u ||
-          adc_raw == 0xFFFFFFFFu || adc_raw == 0xFFFFFFFEu || adc_raw == 0x0u)) {
+    if (top3 == 0x2u || top3 == 0x3u || top3 == 0x4u || top3 == 0x5u ||
+          adc_raw == 0xFFFFFFFFu || adc_raw == 0xFFFFFFFEu || adc_raw == 0x0u){
+        // printf("CS5552 chip%u invalid raw=0x%08lX top3=%lu\r\n",
+        //        chip, (unsigned long)adc_raw, (unsigned long)top3);
         return false;
     }
 
     /* Convert the packed conversion register into a signed 24-bit sample. */
     adc_24bit = (int32_t)(adc_raw & 0xFFFFFFFEu) >> 7;
-    voltage_mv = CS5552_ConvertToVoltage(adc_24bit, pga_gain);
+    adc_24bit_filtered = FilterInt32_Update(filter_ctx, adc_24bit);
+    voltage_mv = CS5552_ConvertToVoltage(adc_24bit_filtered, pga_gain);
 
-    *out_data = adc_24bit;
-    /* A light moving average keeps the old sampling path stable during migration. */
-    *out_voltage = Filter_Update(filter_ctx, voltage_mv);
+    *out_data = adc_24bit_filtered;
+    *out_voltage = voltage_mv * 1000;
+    // printf("CS5552 chip%u raw=0x%08lX code=%ld voltage=%f\r\n",
+    //        chip, (unsigned long)adc_raw, (long)adc_24bit_filtered, *out_voltage);
     return true;
 }
 float CS5552_ConvertToVoltage(int32_t raw_code, uint8_t pga_gain) {
@@ -467,8 +473,8 @@ bool CS5552_CompatDualInit(void) {
         printf("CS5552-1 Init Fail!\r\n");
     }
 
-    Filter_Init(&voltage_filter_ch0);
-    Filter_Init(&voltage_filter_ch1);
+    FilterInt32_Init(&code_filter_ch0);
+    FilterInt32_Init(&code_filter_ch1);
 
     cs5552_ready = (chip0_ready && chip1_ready) ? true : false;
     return cs5552_ready;
@@ -476,7 +482,7 @@ bool CS5552_CompatDualInit(void) {
 
 void CS5552_CompatInit(cs5552_compat_t *compat_ctx)
 {
-    printf("CS5552 Compatibility Init...\r\n");
+    // printf("CS5552 Compatibility Init...\r\n");
     if (compat_ctx == NULL) {
         return;
     }
@@ -487,7 +493,7 @@ void CS5552_CompatInit(cs5552_compat_t *compat_ctx)
 
     cs5552_ready = CS5552_CompatDualInit();
     compat_ctx->runState = cs5552_ready ? cs5530RunNormal : cs5530RunAbnormal;
-    printf("CS5552 Compatibility Init %s\r\n", cs5552_ready ? "Success" : "Failed");
+    // printf("CS5552 Compatibility Init %s\r\n", cs5552_ready ? "Success" : "Failed");
 }
 
 void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
@@ -504,7 +510,8 @@ void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
     }
 
     /* Preserve the original round-robin order expected by the old control path. */
-    switch (compat_ctx->csChannel) {
+    // switch (compat_ctx->csChannel) {
+    switch (cs5530Channel2) {
     case cs5530Channel1:
         compat_ctx->Code[cs5530Channel1] = 0;
         compat_ctx->Voltage[cs5530Channel1] = 0.0f;
@@ -518,7 +525,7 @@ void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
             compat_ctx->Voltage[cs5530Channel2] = voltage;
             compat_ctx->Value[cs5530Channel2] = voltage;
             compat_ctx->csChannel = cs5530Channel3;
-            // printf("cs5552CompatForce value=%f\r\n", compat_ctx->Value[cs5530Channel2]);
+            printf("%.6f\r\n", compat_ctx->Value[cs5530Channel2]);
         }
         break;
 
@@ -528,6 +535,7 @@ void CS5552_CompatDataGet(cs5552_compat_t *compat_ctx)
             compat_ctx->Voltage[cs5530Channel3] = voltage;
             compat_ctx->Value[cs5530Channel3] = voltage;
             compat_ctx->csChannel = cs5530Channel1;
+            // printf("%.6f\r\n", compat_ctx->Value[cs5530Channel3]);
             // printf("cs5552CompatStrain2 value=%f\r\n", compat_ctx->Value[cs5530Channel3]);
         }
         break;

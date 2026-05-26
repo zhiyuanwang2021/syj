@@ -12,6 +12,14 @@ void Filter_Init(SlidingAvgFilter *f)
     f->is_full = 0;
 }
 
+void FilterInt32_Init(SlidingAvgFilterInt32 *f)
+{
+    memset(f->buffer, 0, sizeof(f->buffer));
+    f->index = 0;
+    f->sum = 0;
+    f->is_full = 0;
+}
+
 /**
  * @brief  Update filter with new sample value (sliding window average)
  * @param  f: filter instance pointer
@@ -39,4 +47,22 @@ float Filter_Update(SlidingAvgFilter *f, float input)
         return f->sum / f->index;
     }
     return f->sum / FILTER_SIZE;
+}
+
+int32_t FilterInt32_Update(SlidingAvgFilterInt32 *f, int32_t input)
+{
+    f->sum -= f->buffer[f->index];
+    f->buffer[f->index] = input;
+    f->sum += input;
+
+    f->index++;
+    if (f->index >= FILTER_SIZE) {
+        f->index = 0;
+        f->is_full = 1;
+    }
+
+    if (!f->is_full && f->index > 0) {
+        return (int32_t)(f->sum / (int64_t)f->index);
+    }
+    return (int32_t)(f->sum / FILTER_SIZE);
 }

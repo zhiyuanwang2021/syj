@@ -97,7 +97,12 @@ void inputGetValue()
 	// AI 鍦ㄥ閮ㄤ腑鏂腑鑾峰彇
 	extern uint16_t time13Count;
 	__HAL_TIM_SetCounter(&htim13, 0);
-	CS5552_CompatDataGet(&cs5552_compat_ctx);
+	static uint8_t cs5552SampleDivider = 0;
+	if(++cs5552SampleDivider >= 40)
+	{
+		cs5552SampleDivider = 0;
+		CS5552_CompatDataGet(&cs5552_compat_ctx);
+	}
 	time13Count = __HAL_TIM_GetCounter(&htim13);
 	// DI
 	DIDetect_ReadALL();

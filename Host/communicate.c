@@ -9,6 +9,7 @@
 #include "DI.h"
 #include "DO.h"
 #include "in_out.h"
+#include "CS5552.h"
 #include "pid.h"
 #include <elog.h>
 
@@ -2009,12 +2010,14 @@ void RDSERVOPARA_Process(void){
 }
 
 /* Fun_133 */
+
 void CurrentData_Fifo_Push(void)
 {
 	uint32_t temp=0;
 	uint16_t i=0;
 	cdatatrans.Position=pose.orig;
-	cdatatrans.Load	= force.filterTrans;
+	cdatatrans.Load	= cs5552_compat_ctx.Value[CS5552_COMPAT_CHANNEL_FORCE];
+	// cdatatrans.Load	= force.filterTrans;
 	cdatatrans.Extensometer1 = strain1.filterTrans;
 	// strain1Lsm.filter*1000;
 	cdatatrans.Extensometer2 = strain2.orig;//if the orig of strain2 is fine,then we should change the strain2.orig to strain2.filterTrans
