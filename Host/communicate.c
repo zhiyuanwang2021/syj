@@ -95,7 +95,7 @@ void ETH_Communicate_Process(void)
 {
 	uint16_t _lpusTAN;
 	extern osMessageQId lpusTANQueueHandle;
-	//lpusTAN push in send ring fifo push
+	// Push pending lpusTAN reports into the Ethernet send FIFO.
 	while(uxQueueMessagesWaiting(lpusTANQueueHandle) != 0){
 		if(xQueueReceive(lpusTANQueueHandle,&(_lpusTAN),0) == pdPASS){
 			buf_com[0] = _lpusTAN >> 8;
@@ -104,199 +104,192 @@ void ETH_Communicate_Process(void)
             /* xRxedStructure now contains a copy of xMessage. */
         }
 	}
-	//send hldr of utcSetOn
+	// Push pending UTC event notifications into the send FIFO.
 	sendUtcSetOn();
 
 
-	//鎺ユ敹鏁版嵁鍖呭鐞?
+	// Pop each received UTC frame and dispatch it by function code.
 	while(rev_fifo.state != FIFO_EMPTY)
 	{
-		rev_ring_fifo_pop(buf_data_save);//鎺ユ敹闃熷垪pop涓€鏉℃暟鎹抚
+		rev_ring_fifo_pop(buf_data_save);
 		while(mySemaphore.paraconfig.write == 1 || mySemaphore.paraconfig.set == 1){
 			osDelay(1);
 		}	
-			if(buf_data_save[0] == 0xAA && buf_data_save[1] == 0xAA) //鍐嶆纭甯уご 骞?闃叉闃熷垪绌哄拰閿欒甯ф儏鍐?
+			// Re-check the frame header before decoding the payload.
+			if(buf_data_save[0] == 0xAA && buf_data_save[1] == 0xAA)
 			{ 
-				//in assembly move instruction
-				//case 1:CMD_DWND,record all movement command (Max load value is 10) 
+				// In download mode, movement commands are recorded into the combined-move buffer.
 				if((combinedMove.blockHeader.ModeFlags & BHM_CMD_DWND) == BHM_CMD_DWND
 					&& buf_data_save[2] >= DOPEPOS && buf_data_save[2] <= DOPEBLOCKEXECUTE){
 						combinedMoveDWND_Process();
 				}else{
-					switch(buf_data_save[2])//鍔熻兘鐮?
+					// buf_data_save[2] is the UTC function code.
+					switch(buf_data_save[2])
 					{
-						case LINK_ACK://瀵?xA0鍔熻兘鐮佸簲绛旓紝鐢ㄤ簬鍒ゆ柇缃戠粶鐘舵€?
+						case LINK_ACK:
 								LINK_ACK_Process();
 							break;
-						case DOPE_OPEN_CLOSE_LINK://寤虹珛鎴栨柇寮€杩炴帴 鏁版嵁闀垮害 00 01  鏁版嵁鍐呭 01   //01 On   00 Off 
+						case DOPE_OPEN_CLOSE_LINK:
 								DOPE_OPEN_CLOSE_LINK_Process();
 							break;
-						case DOPEON_OFF://婵€娲?鍋滅敤鎺у埗鍣?鏁版嵁闀垮害 00 01  鏁版嵁鍐呭 01   //01 On   00 Off 
+						case DOPEON_OFF:
 								DOPEON_OFF_Process();
 							break;
-						case DOPESETCTRL://浣胯兘/涓嶄娇鑳介棴鐜帶鍒?鏁版嵁闀垮害 00 01  鏁版嵁鍐呭 01   //01 On   00 Off 
+						case DOPESETCTRL:
 								DOPESETCTRL_Process();
 							break; 
-						case DOPETRANSMITDATA://婵€娲?鍋滅敤娴嬮噺鏁版嵁浼犺緭
+						case DOPETRANSMITDATA:
 								DOPETRANSMITDATA_Process();
 							break;
-						case DOPERDNOMINALACCSPEED://0x07 璇诲彇浣嶇疆鐢熸垚鍣ㄦ爣绉板€?*****
+						case DOPERDNOMINALACCSPEED:
 								DOPERDNOMINALACCSPEED_Process();
 						break;
-						case DOPESETNOMINALACCSPEED://0x08 璇诲彇浣嶇疆鐢熸垚鍣ㄦ爣绉板€?*****
+						case DOPESETNOMINALACCSPEED:
 								DOPESETNOMINALACCSPEED_Process();
 						break;
-						case DOPERDCTRLPARAMETER://璇诲彇鎵€鏈夐棴鐜帶鍒跺弬鏁?**
+						case DOPERDCTRLPARAMETER:
 								DOPERDCTRLPARAMETER_Process();
 							break;
-						case DOPEDEADBANDCTRL://璁惧畾璇樊姝诲尯鎺у埗鍙傛暟*
+						case DOPEDEADBANDCTRL:
 								DOPEDEADBANDCTRL_Process();
 							break;
-						case DOPEDEFAULTACC://璁惧畾榛樿鍔犻€熷害*
+						case DOPEDEFAULTACC:
 								DOPEDEFAULTACC_Process();
 							break;
-						case DOPESPEEDLIMIT://璁惧畾鏈€澶ч檺瀹氶€熷害*
+						case DOPESPEEDLIMIT:
 								DOPESPEEDLIMIT_Process();
 							break;
-						case DOPESETDATATRANSMISSIONRATE://璁惧畾鏁版嵁鍙戦€佸懆鏈?
+						case DOPESETDATATRANSMISSIONRATE:
 								DOPESETDATATRANSMISSIONRATE_Process();
 							break;
-						case DOPEINTGR://璁惧畾浼犳劅鍣ㄦ护娉㈡椂闂?
+						case DOPEINTGR:
 								DOPEINTGR_Process();
 							break;
-						case DOPEDESTWND://璁惧畾鐩爣璇樊/鏃堕棿绐楀彛*
+						case DOPEDESTWND:
 								DOPEDESTWND_Process();
 							break;
-						case DOPESFT://璁惧畾杞檺浣?
+						case DOPESFT:
 								DOPESFT_Process();
 							break;
-						case DOPEPOSPID://0x11  璁剧疆浣嶇疆闂幆鎺у埗鍙傛暟****** 
+						case DOPEPOSPID:
 								DOPEPOSPID_Process();
 							break;
-						case DOPERDPOSPID://璇诲彇浣嶇疆闂幆鎺у埗鍙傛暟*
+						case DOPERDPOSPID:
 								DOPERDPOSPID_Process();
 							break;
-						case DOPEWRPOSPID://鍐欏叆浣嶇疆闂幆鎺у埗鍙傛暟*
+						case DOPEWRPOSPID:
 								DOPEWRPOSPID_Process();
 							break;
-						case DOPESPEEDPID://0x14  璁剧疆閫熷害闂幆鎺у埗鍙傛暟****** 
+						case DOPESPEEDPID:
 								DOPESPEEDPID_Process();
 						break;
-						case DOPERDSPEEDPID://0x15  璇诲彇閫熷害闂幆鎺у埗鍙傛暟****** 
+						case DOPERDSPEEDPID:
 								DOPERDSPEEDPID_Process();
 						break;
-						case DOPEWRSPEEDPID://0x16  鍐欏叆閫熷害闂幆鎺у埗鍙傛暟****** 
+						case DOPEWRSPEEDPID:
 								DOPEWRSPEEDPID_Process();
 						break;
-						case DOPEFEEDFORWARD://0x17 璁剧疆閫熷害鍓嶉鍙傛暟****** 
+						case DOPEFEEDFORWARD:
 								DOPEFEEDFORWARD_Process();
 						break;
-						case DOPERDFEEDFORWARD://璇诲彇閫熷害鍓嶉鍙傛暟*
+						case DOPERDFEEDFORWARD:
 								DOPERDFEEDFORWARD_Process(); 
 							break;
-						case DOPEWRFEEDFORWARD://鍐欏叆閫熷害鍓嶉鍙傛暟*
+						case DOPEWRFEEDFORWARD:
 								DOPEWRFEEDFORWARD_Process();
 							break;
-						case DOPESETSENSORCORRECTION://璁惧畾浼犳劅鍣ㄦ牎姝ｈ〃鎸囦护
+						case DOPESETSENSORCORRECTION:
 								//DOPESETSENSORCORRECTION_Process();
 							break;
-						case RDOUTPUTPARA://璇诲彇杈撳嚭鍙傛暟
+						case RDOUTPUTPARA:
 								RDOUTPUTPARA_Process();
 							break;
-						case WROUTPUTPARA://鍐欏叆杈撳嚭鍙傛暟
+						case WROUTPUTPARA:
 								WROUTPUTPARA_Process(&OutputPara_combuf);
 							break;
-						case RDETHPARA://璇讳互澶綉鍙傛暟*
+						case RDETHPARA:
 								RDETHPARA_Process();
 							break;
-						case WRETHPARA://涓嬪彂浠ュお缃戝弬鏁?涓嬩綅鏈烘敹鍒板悗閲嶅惎*
+						case WRETHPARA:
 								WRETHPARA_Process();
 							break;				
-						case RDSYSPARA://璇荤郴缁熷弬鏁?
+						case RDSYSPARA:
 								RDSYSPARA_Process();
 							break;
-						case WRSYSPARA://涓嬪彂绯荤粺鍙傛暟
+						case WRSYSPARA:
 								WRSYSPARA_Process();
 							break;				
-						case DOPEWRDVERSION://璇荤増鏈俊鎭?
+						case DOPEWRDVERSION:
 							/* Fun_18335 */
 							/* Fun_18415 */
 							break;
-						case SETTARE://娴嬮噺閫氶亾鏁板€兼竻闆?
+						case SETTARE:
 							SETTARE_Process();
 							break;
-						case WRSERVOPARA://鍐欏叆浼烘湇鍙傛暟
+						case WRSERVOPARA:
 							WRSERVOPARA_Process();
 							break;
-						case RDSERVOPARA://璇讳己鏈嶅弬鏁?
+						case RDSERVOPARA:
 							RDSERVOPARA_Process();
 							break;
-						case DOPESETOPENLOOPCOMMAND://寮€鐜祴璇曟寚浠?
+						case DOPESETOPENLOOPCOMMAND:
 							DOPESETOPENLOOPCOMMAND_Process();
 							break;				
-						case DOPEMOVE://浠ラ粯璁ゅ姞閫熷害涓婁笅绉诲姩
+						case DOPEMOVE:
 							DOPEMOVE_Process();
 							break;
-						case DOPEMOVE_A://浠ユ寚瀹氬姞閫熷害涓婁笅绉诲姩
+						case DOPEMOVE_A:
 							DOPEMOVE_A_Process();
 							break;				
-						case DOPEPOS://浠ラ粯璁ゅ姞閫熷害绉诲姩鑷虫寚瀹氫綅缃?0x23
+						case DOPEPOS:
 							DOPEPOS_Process();
 							break;
-						case DOPEPOS_A://浠ユ寚瀹氬姞/鍑忛€熷害绉诲姩鑷虫寚瀹氫綅缃?0x24
+						case DOPEPOS_A:
 							DOPEPOS_A_Process();
 							break;
 						case DOPEPOSEXT:
-						/*鍦ㄦ寚瀹氱殑鎺у埗妯″紡涓嬶紝浠ラ粯璁ゅ姞閫熷害绉诲姩鑷虫寚瀹氫綅缃紝鑻ヨ揪鍒伴檺浣嶄綅缃紝鍒欎互榛樿鍑忛€熷害鍋滄锛?
-						鑻ュ嵆灏嗚揪鍒版寚瀹氫綅缃紝鍒欐牴鎹弬鏁扳€淒estinationMode鈥濈‘瀹氬埌杈炬寚瀹氫綅缃殑鎺у埗鏂瑰紡浠ュ強鍒拌揪鎸囧畾浣嶇疆鍚庣殑鎿嶄綔*/
 							DOPEPOSEXT_Process();
 						break;
 						case DOPEPOSEXT_A:
-						/* Fun_18343 */
-						/*鍚孌oPEPosExt锛屼絾鍦ㄥ姞鍑忛€熻繃绋嬩腑锛岄渶瑕佹寚瀹氬姞閫熷害锛岄檺浣嶅噺閫熷害锛岄潬杩戠洰鏍囦綅缃悗鐨勫噺閫熷害*/
 							DOPEPOSEXT_A_Process();
 						break;
-						case DOPEHALT://浠ラ粯璁ゅ噺閫熷害浠庣幇Command閫熷害鍑忛€熻嚦0
+						case DOPEHALT:
 							DOPEHALT_Process();
 						break;
-						case DOPEHALT_A://浠ユ寚瀹氬噺閫熷害浠庣幇Command閫熷害鍑忛€熻嚦0
+						case DOPEHALT_A:
 							DOPEHALT_A_Process();
 						break;
-						case DOPESHALT://浠ユ爣绉板噺閫熷害浠庡綋鍓嶄綅缃噺閫熻嚦0锛屾病鏈塎oveCtrl閫夋嫨锛屽彧鏈変綅缃ā寮?
+						case DOPESHALT:
 							DOPESHALT_Process();
 						break;
 						case DOPETRIG:
-						/*浠ユ寚瀹氶€熷害绉诲姩鍒伴檺鍒朵綅缃?
-						濡傛灉鍒拌揪瑙﹀彂鏉′欢浣嶇疆锛屽皢鍙戦€佷竴鏉℃秷鎭紙濡傛灉鍦ㄧ粍鍚堢Щ鍔ㄥ簭鍒椾腑浣跨敤锛屽垯婵€娲讳笅涓€涓懡浠わ級*/
 							DOPETRIG_Process();
 						break;
 						case DOPETRIG_A:
-						/*鍚孌oPETrig锛屼絾鍦ㄥ姞鍑忛€熻繃绋嬩腑锛岄渶瑕佹寚瀹氬姞閫熷害锛岄檺浣嶅噺閫熷害*/
 							DOPETRIG_A_Process();
 						break;
-						case DOPEBLOCKHEADER://鎵€鏈夌畝鍗曞懡浠ょ粍鍚堢Щ鍔ㄧ殑鎸囦护搴忓垪澶?
+						case DOPEBLOCKHEADER:
 							DOPEBLOCKHEADER_Process();
 						break;
-						case DOPEBLOCKEXECUTE://鎵€鏈夌畝鍗曞懡浠ょ粍鍚堢Щ鍔ㄧ殑鎵ц鍛戒护(寮€濮?缁撴潫)
+						case DOPEBLOCKEXECUTE:
 							DOPEBLOCKEXECUTE_Process();
 						break;
-						case DOPECYCLE://鐢ㄦ枩鍧″嚱鏁版墽琛屽懆鏈熻繍鍔?
+						case DOPECYCLE:
 							DOPECYCLE_Process();
 						break;
-						case DOPEDYNCYCLE://鍔ㄦ€佸惊鐜寚浠?**
+						case DOPEDYNCYCLE:
 							DOPEDYNCYCLE_Process();
 						break;
-						//浼犳劅鍣ㄧ浉鍏?
-						case RDSENSORDATA://璇诲彇浼犳劅鍣ㄦ暟鎹?
+						case RDSENSORDATA:
 							RDSENSORDATA_Process();
 						break;
-						case WRSENSORDATA://鍐欏叆浼犳劅鍣ㄦ暟鎹?
+						case WRSENSORDATA:
 							WRSENSORDATA_Process();
 						break;
-						case RDSENSORBIGDEFORMATIONDATA://璇诲彇浼犳劅鍣ㄦ暟鎹?
+						case RDSENSORBIGDEFORMATIONDATA:
 							RDSENSORBIGDEFORMATIONDATA_Process();
 						break;
-						case WRSENSORBIGDEFORMATIONDATA://鍐欏叆浼犳劅鍣ㄦ暟鎹?
+						case WRSENSORBIGDEFORMATIONDATA:
 							WRSENSORBIGDEFORMATIONDATA_Process();
 						break;
 						default:
