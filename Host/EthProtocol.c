@@ -41,32 +41,32 @@ uint8_t UTC_revbuf_process(UTC_ETH* EthStruct)
 	uint16_t i=0,j=0,k=0;
 	uint8_t buf_last=0,buf_now=0,i_last=0;
 	uint8_t* p;
-	uint16_t DataLen=0;//甯ф湁鏁堣浇鑽锋暟鎹暱搴?
+	uint16_t DataLen=0;
 	p = EthStruct->Revbuf;
-	memset(buf_eth,0,sizeof(buf_eth));//娓呯┖buf
-	//鎷嗗寘
+	memset(buf_eth,0,sizeof(buf_eth));
+	// Scan the received byte stream and extract complete UTC frames.
 	//log_i("size %d",EthStruct->revsize);
 	for(i=0;i<EthStruct->revsize;i++)
 	{
 			buf_now = p[i];
 			i_last = i;
-			if( buf_last == REV_CHECK_NUM1 && buf_now == REV_CHECK_NUM2 ) //鎵惧埌甯уご
+			if( buf_last == REV_CHECK_NUM1 && buf_now == REV_CHECK_NUM2 ) 
 			{
 					j=0;
 					buf_eth[j++]= REV_CHECK_NUM1;
 					buf_eth[j++]= REV_CHECK_NUM2;
-					buf_eth[j++] = p[++i];//鍔熻兘鐮?
-					buf_eth[j++] = p[++i];//鏁版嵁闀垮害H
-					buf_eth[j++] = p[++i];//鏁版嵁闀垮害L
+					buf_eth[j++] = p[++i];// Function code
+					buf_eth[j++] = p[++i];// Payload length high byte
+					buf_eth[j++] = p[++i];// Payload length low byte
 				  DataLen = buf_eth[j-2]*256+buf_eth[j-1];
 				  for(k=0;k<DataLen;k++)
 					{
-						buf_eth[j++] = p[++i];//鏈夋晥杞借嵎鏁版嵁 Payload
+						buf_eth[j++] = p[++i];// Payload
 					}
-					// 璇诲彇鏁版嵁甯у熬
-					buf_eth[j++] = p[++i];//甯у熬H
-					buf_eth[j++] = p[++i];//甯у熬L						
-					if(buf_eth[j-2] == TAIL_CHECK_NUM1 && buf_eth[j-1] == TAIL_CHECK_NUM2)//甯у熬姝ｇ‘
+					// Read and validate the frame tail 0x55 0x55.
+					buf_eth[j++] = p[++i];// Tail high byte
+					buf_eth[j++] = p[++i];// Tail low byte
+					if(buf_eth[j-2] == TAIL_CHECK_NUM1 && buf_eth[j-1] == TAIL_CHECK_NUM2)
 					{
 #ifdef fifo_debug_rev
 						printf("DataLen:%d\r\n",DataLen);
@@ -78,7 +78,7 @@ uint8_t UTC_revbuf_process(UTC_ETH* EthStruct)
 						printf("\r\n");
 #endif
 						buf_now	= buf_eth[j-1];	
-						//澶勭悊姝ゅ抚buf_eth  鍘嬪叆寰幆闃熷垪
+						// Push the valid frame into the receive ring FIFO.
 						rev_ring_fifo_push(j-2,buf_eth);
 #ifdef fifo_debug_rev1
 							for(k=0;k<REV_FIFO_SIZE;k++)
@@ -92,7 +92,7 @@ uint8_t UTC_revbuf_process(UTC_ETH* EthStruct)
 						
 #endif
 					}
-					else//甯у熬涓嶆纭紝缁х画瀵绘壘涓嬩竴甯э紝浠庝笂涓€娆℃壘鍒?xAA 0xAA 鍐嶉噸鏂板紑濮嬪鎵?
+					else// Tail check failed, resume searching from the last header candidate.
 					{
 						i = i_last;
 						buf_now	= p[i];	
